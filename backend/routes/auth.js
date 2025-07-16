@@ -122,7 +122,62 @@ router.post('/getuser', fetchuser, async (req, res) => {
   }
 });
 
-//Route 4:  Get User data for the dashboard: GET "/api/auth/getuserdetails". Login required
+
+//Route 4:
+router.put('/updateuser', fetchuser, [
+    body('name', 'Enter a valid name').isLength({ min: 3 }),
+    body('email', 'Enter a valid email').isEmail(),
+    body('phoneNumber', 'Enter a valid phone number').optional().isMobilePhone(),
+    body('bio', 'Bio cannot exceed 500 characters').optional().isLength({ max: 500 }),
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        const { name, email, phoneNumber, bio, profilePic } = req.body;
+        const userId = req.user.id;
+
+        // Check if email already exists for another user
+        const existingUser = await User.findOne({ 
+            email, 
+            _id: { $ne: userId } 
+        });
+        
+        if (existingUser) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Email already in use' 
+            });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { 
+                $set: { 
+                    name,
+                    email,
+                    phoneNumber,
+                    bio,
+                    profilePic
+                }
+            },
+            { new: true }
+        ).select('-password');
+
+        res.json({ 
+            success: true, 
+            user: updatedUser 
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+
 
 
 module.exports = router;

@@ -12,6 +12,7 @@ import Alert from './components/Alert';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import CreatePost from './components/CreatePost';
+import Dashboard from './components/Dashboard';
 import React, { useState } from 'react';
 function App() {
   const [alert, setAlert] = useState(null);
@@ -37,6 +38,7 @@ function App() {
         <Route exact path="/login" element={<Login showAlert={showAlert} />} />
         <Route exact path="/signup" element={<Signup showAlert={showAlert} />} />
         <Route exact path="/createpost" element={<CreatePost showAlert={showAlert} />} />
+        <Route exact path="/dashboard" element={<Dashboard showAlert={showAlert} /> } />
       </Routes>
       </div>
     </Router>
