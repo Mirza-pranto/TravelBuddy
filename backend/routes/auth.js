@@ -122,4 +122,7 @@ router.post('/getuser', fetchuser, async (req, res) => {
   }
 });
 
+//Route 4:  Get User data for the dashboard: GET "/api/auth/getuserdetails". Login required
+
+
 module.exports = router;

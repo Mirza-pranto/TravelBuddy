@@ -25,7 +25,9 @@ const Navbar = () => {
               <li className="nav-item">
                 <Link className={`nav-link ${location.pathname === "/about" ? "active" : ""}`} to="/about">About</Link>
               </li>
-              
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/createpost" ? "active" : ""}`} to="/createpost">Create Post</Link>
+              </li>
               
             </ul>
             {!localStorage.getItem('token') ? (

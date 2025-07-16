@@ -4,7 +4,9 @@ import Notes from './Notes';
 const Home = (props) => {
     return (
         <div> 
-            <Notes showAlert={props.showAlert}/>
+            <h2>
+            Welcome to TravelBuddy..
+            </h2>
         </div>
     )
 }
