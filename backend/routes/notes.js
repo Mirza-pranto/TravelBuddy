@@ -18,10 +18,15 @@ router.get('/fetchallnotes', fetchuser, async (req, res) => {
 //Route 2: Add a new note: POST "/api/notes/addnote" . Login required
 router.post('/addnote', fetchuser, [
     body('title', 'Enter a valid title').isLength({ min: 3 }),
+    body('destination', 'Destination is required').notEmpty(),
+    body('startDate', 'Start date is required').isISO8601(),
+    body('endDate', 'End date is required').isISO8601(),
+    body('budget', 'Budget must be a number').isNumeric(),
+    body('travelType', 'Invalid travel type').isIn(['Adventure', 'Relax', 'Cultural', 'Backpacking', 'Other']),
     body('description', 'Description must be at least 5 characters').isLength({ min: 5 }),
 ], async (req, res) => { 
     try {
-        const { title, description, tag } = req.body;
+        const { title, destination, startDate, endDate, budget, travelType, description, tag } = req.body;
 
         // If there are errors, return bad request and the errors 
         const errors = validationResult(req);
@@ -31,6 +36,11 @@ router.post('/addnote', fetchuser, [
 
         const note = new Notes({
             title,
+            destination,
+            startDate,
+            endDate,
+            budget,
+            travelType,
             description,
             tag,
             user: req.user.id
@@ -44,13 +54,19 @@ router.post('/addnote', fetchuser, [
         res.status(500).send("Some error occurred");
     }
 });
+
 //Route 3: Update an existing note: PUT "/api/notes/updatenote/:id" . Login required
 router.put('/updatenote/:id', fetchuser, async (req, res) => {
-    const { title, description, tag } = req.body;
+    const { title, destination, startDate, endDate, budget, travelType, description, tag } = req.body;
 
     // Create a newNote object
     const newNote = {};
     if (title) newNote.title = title;
+    if (destination) newNote.destination = destination;
+    if (startDate) newNote.startDate = startDate;
+    if (endDate) newNote.endDate = endDate;
+    if (budget) newNote.budget = budget;
+    if (travelType) newNote.travelType = travelType;
     if (description) newNote.description = description;
     if (tag) newNote.tag = tag;
 
@@ -72,6 +88,7 @@ router.put('/updatenote/:id', fetchuser, async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 });
+
 
 
 //Route 4: Delete an existing note: DELETE "/api/notes/deletenote/:id" . Login required

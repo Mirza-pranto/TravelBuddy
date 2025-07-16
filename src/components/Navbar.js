@@ -8,7 +8,9 @@ const Navbar = () => {
   
   return (
     <div>
-      <nav className="navbar navbar-expand-lg bg-body-tertiary">
+      <nav className="navbar navbar-expand-lg navbar-dark bg-success">
+ 
+
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">TravelBuddy</Link>
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
@@ -32,7 +34,7 @@ const Navbar = () => {
                 <Link className="btn btn-primary mx-2" to="/signup">Signup</Link>
               </form>
             ) : (
-              <button className="btn btn-primary mx-2" onClick={() => { localStorage.removeItem('token'); window.location.reload(); }}>Logout</button>
+              <button className="btn btn-light mx-2" onClick={() => { localStorage.removeItem('token'); window.location.reload(); }}>Logout</button>
             )}
           </div>
         </div>
