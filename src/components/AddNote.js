@@ -64,6 +64,7 @@ const AddNote = (props) => {
                     <div className="mb-3">
                         <label htmlFor="travelType" className="form-label">Travel Type</label>
                         <select className="form-control" id="travelType" name="travelType" value={note.travelType} onChange={onChange} required>
+                            <option value="">Select a travel type</option>
                             <option value="Adventure">Adventure</option>
                             <option value="Relax">Relax</option>
                             <option value="Cultural">Cultural</option>
@@ -73,7 +74,7 @@ const AddNote = (props) => {
                     </div>
                     <div className="mb-3">
                         <label htmlFor="description" className="form-label">Description</label>
-                        <textarea className="form-control" id="description" name="description" value={note.description} onChange={onChange} minLength={5} required />
+                        <textarea className="form-control" id="description" name="description" value={note.description} onChange={onChange} minLength={5} required></textarea>
                     </div>
                     <div className="mb-3">
                         <label htmlFor="tag" className="form-label">Tag</label>
