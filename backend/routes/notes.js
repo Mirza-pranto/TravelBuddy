@@ -28,7 +28,7 @@ router.post('/addnote', fetchuser, [
     try {
         const { title, destination, startDate, endDate, budget, travelType, description, tag } = req.body;
 
-        // If there are errors, return bad request and the errors 
+        // Validate errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -54,7 +54,6 @@ router.post('/addnote', fetchuser, [
         res.status(500).send("Some error occurred");
     }
 });
-
 //Route 3: Update an existing note: PUT "/api/notes/updatenote/:id" . Login required
 router.put('/updatenote/:id', fetchuser, async (req, res) => {
     const { title, destination, startDate, endDate, budget, travelType, description, tag } = req.body;
