@@ -1,13 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faEnvelope, faPhone, faIdCard, faPen, faStar, faMapMarked, faCalendar } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faEnvelope, faPhone, faIdCard, faPen, faStar, faMapMarked, faCalendar, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 const Dashboard = (props) => {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('profile');
     const navigate = useNavigate();
+    const [isEditing, setIsEditing] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+        name: '',
+        email: '',
+        phoneNumber: '',
+        bio: '',
+        profilePic: ''
+    });
+
+    // Update editFormData when userData is loaded
+    useEffect(() => {
+        if (userData) {
+            setEditFormData({
+                name: userData.name || '',
+                email: userData.email || '',
+                phoneNumber: userData.phoneNumber || '',
+                bio: userData.bio || '',
+                profilePic: userData.profilePic || ''
+            });
+        }
+    }, [userData]);
+
+    // Handle form changes
+    const handleEditChange = (e) => {
+        setEditFormData({
+            ...editFormData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    // Handle form submission
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch("http://localhost:5000/api/auth/updateuser", {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token': token
+                },
+                body: JSON.stringify(editFormData)
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                setUserData({ ...userData, ...editFormData });
+                setIsEditing(false);
+                props.showAlert("Profile updated successfully", "success");
+            } else {
+                props.showAlert("Failed to update profile", "danger");
+            }
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            props.showAlert("Error updating profile", "danger");
+        }
+    };
 
     useEffect(() => {
         fetchUserData();
@@ -75,10 +132,7 @@ const Dashboard = (props) => {
                                 <FontAwesomeIcon icon={faMapMarked} className="me-2" />
                                 Travel Enthusiast
                             </p>
-                            <button className="btn btn-success w-100 mb-3">
-                                <FontAwesomeIcon icon={faPen} className="me-2" />
-                                Edit Profile
-                            </button>
+                            
                             
                             {/* Quick Stats */}
                             <div className="list-group mt-4">
@@ -129,48 +183,126 @@ const Dashboard = (props) => {
                         <div className="card-body">
                             {activeTab === 'profile' ? (
                                 <>
-                                    <h6 className="border-bottom pb-2 mb-4">Personal Information</h6>
-                                    <div className="row g-3">
-                                        <div className="col-md-6">
-                                            <div className="d-flex align-items-center">
-                                                <FontAwesomeIcon icon={faEnvelope} className="text-success me-2" />
-                                                <div>
-                                                    <small className="text-muted d-block">Email</small>
-                                                    <span>{userData.email}</span>
-                                                </div>
+                                    <div className="d-flex justify-content-between align-items-center mb-4">
+                                        <h6 className="border-bottom pb-2">Personal Information</h6>
+                                        {!isEditing ? (
+                                            <button 
+                                                className="btn btn-success btn-sm"
+                                                onClick={() => setIsEditing(true)}
+                                            >
+                                                <FontAwesomeIcon icon={faPen} className="me-2" />
+                                                Edit Profile
+                                            </button>
+                                        ) : (
+                                            <div>
+                                                <button 
+                                                    className="btn btn-success btn-sm me-2"
+                                                    onClick={handleEditSubmit}
+                                                >
+                                                    <FontAwesomeIcon icon={faSave} className="me-2" />
+                                                    Save
+                                                </button>
+                                                <button 
+                                                    className="btn btn-secondary btn-sm"
+                                                    onClick={() => {
+                                                        setIsEditing(false);
+                                                        setEditFormData({
+                                                            name: userData.name,
+                                                            email: userData.email,
+                                                            phoneNumber: userData.phoneNumber,
+                                                            bio: userData.bio,
+                                                            profilePic: userData.profilePic
+                                                        });
+                                                    }}
+                                                >
+                                                    <FontAwesomeIcon icon={faTimes} className="me-2" />
+                                                    Cancel
+                                                </button>
                                             </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="d-flex align-items-center">
-                                                <FontAwesomeIcon icon={faPhone} className="text-success me-2" />
-                                                <div>
-                                                    <small className="text-muted d-block">Phone</small>
-                                                    <span>{userData.phoneNumber || 'Not provided'}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="d-flex align-items-center">
-                                                <FontAwesomeIcon icon={faIdCard} className="text-success me-2" />
-                                                <div>
-                                                    <small className="text-muted d-block">NID</small>
-                                                    <span>{userData.nidNumber}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="d-flex align-items-center">
-                                                <FontAwesomeIcon icon={faCalendar} className="text-success me-2" />
-                                                <div>
-                                                    <small className="text-muted d-block">Member Since</small>
-                                                    <span>{new Date(userData.date).getFullYear()}</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
 
-                                    <h6 className="border-bottom pb-2 my-4">Bio</h6>
-                                    <p className="text-muted">{userData.bio || 'No bio provided'}</p>
+                                    {isEditing ? (
+                                        <form onSubmit={handleEditSubmit}>
+                                            <div className="row g-3">
+                                                <div className="col-md-6">
+                                                    <label className="form-label">Name</label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        name="name"
+                                                        value={editFormData.name}
+                                                        onChange={handleEditChange}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <label className="form-label">Email</label>
+                                                    <input
+                                                        type="email"
+                                                        className="form-control"
+                                                        name="email"
+                                                        value={editFormData.email}
+                                                        onChange={handleEditChange}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <label className="form-label">Phone Number</label>
+                                                    <input
+                                                        type="tel"
+                                                        className="form-control"
+                                                        name="phoneNumber"
+                                                        value={editFormData.phoneNumber}
+                                                        onChange={handleEditChange}
+                                                    />
+                                                </div>
+                                                <div className="col-md-12">
+                                                    <label className="form-label">Profile Picture URL</label>
+                                                    <input
+                                                        type="url"
+                                                        className="form-control"
+                                                        name="profilePic"
+                                                        value={editFormData.profilePic}
+                                                        onChange={handleEditChange}
+                                                    />
+                                                </div>
+                                                <div className="col-12">
+                                                    <label className="form-label">Bio</label>
+                                                    <textarea
+                                                        className="form-control"
+                                                        name="bio"
+                                                        value={editFormData.bio}
+                                                        onChange={handleEditChange}
+                                                        rows="3"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        <div className="row">
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <h6><FontAwesomeIcon icon={faUser} className="me-2" /> Name</h6>
+                                                    <p>{userData.name}</p>
+                                                </div>
+                                                <div className="mb-3">
+                                                    <h6><FontAwesomeIcon icon={faEnvelope} className="me-2" /> Email</h6>
+                                                    <p>{userData.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <h6><FontAwesomeIcon icon={faPhone} className="me-2" /> Phone</h6>
+                                                    <p>{userData.phoneNumber || 'Not provided'}</p>
+                                                </div>
+                                                <div className="mb-3">
+                                                    <h6><FontAwesomeIcon icon={faIdCard} className="me-2" /> Bio</h6>
+                                                    <p>{userData.bio || 'No bio provided'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             ) : (
                                 <div className="table-responsive">
