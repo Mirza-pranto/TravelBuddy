@@ -5,35 +5,42 @@ import noteContext from '../context/notes/noteContext';
 
 const Noteitem = (props) => {
     const context = React.useContext(noteContext);
-    const { note, updateNote } = props;
     const { deleteNote } = context;
+    const { note, updateNote, showAlert, editable = true } = props; // default editable = true
 
     return (
-        <div className="col-md-3">
-            <div className="card my-3" style={{ width: '18rem' }}>
-                <div className="card-body">
-                    <div className='d-flex align-items-center justify-content-between'>
+        <div className="col-md-4">
+            <div className="card my-3 shadow-sm" style={{ minHeight: '100%' }}>
+                <div className="card-body d-flex flex-column">
+                    <div className='d-flex align-items-start justify-content-between'>
                         <h5 className="card-title">{note.title}</h5>
-                        <div>
-                            <FontAwesomeIcon
-                                icon={faPenToSquare}
-                                className="text-success me-2 mx-2"
-                                onClick={() => { updateNote(note); }}
-                            />
-                            <FontAwesomeIcon
-                                icon={faTrash}
-                                className="text-danger me-2 mx-2"
-                                onClick={() => { deleteNote(note._id); props.showAlert("Note deleted successfully", "success"); }}
-                            />
-                        </div>
+                        {editable && (
+                            <div>
+                                <FontAwesomeIcon
+                                    icon={faPenToSquare}
+                                    className="text-success me-2 mx-2 cursor-pointer"
+                                    onClick={() => updateNote(note)}
+                                />
+                                <FontAwesomeIcon
+                                    icon={faTrash}
+                                    className="text-danger me-2 mx-2 cursor-pointer"
+                                    onClick={() => {
+                                        deleteNote(note._id);
+                                        if (showAlert) showAlert("Note deleted successfully", "success");
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
-                    <p className="card-text">Destination: {note.destination}</p>
-                    <p className="card-text">Travel Type: {note.travelType}</p>
-                    <p className="card-text">Budget: ${note.budget}</p>
-                    <p className="card-text">Start Date: {new Date(note.startDate).toLocaleDateString()}</p>
-                    <p className="card-text">End Date: {new Date(note.endDate).toLocaleDateString()}</p>
+                    <p className="card-text"><strong>Destination:</strong> {note.destination}</p>
+                    <p className="card-text"><strong>Travel Type:</strong> {note.travelType}</p>
+                    <p className="card-text"><strong>Budget:</strong> ${note.budget}</p>
+                    <p className="card-text"><strong>Start:</strong> {new Date(note.startDate).toLocaleDateString()}</p>
+                    <p className="card-text"><strong>End:</strong> {new Date(note.endDate).toLocaleDateString()}</p>
                     <p className="card-text">{note.description}</p>
-                    <button className="btn btn-success mt-2">Open</button>
+                    <div className="mt-auto">
+                        <button className="btn btn-outline-primary w-100 mt-3">Open</button>
+                    </div>
                 </div>
             </div>
         </div>

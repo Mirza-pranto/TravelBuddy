@@ -5,11 +5,13 @@ const NotesSchema = new Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
-        required: true
+        required: true,
+        index: true
     },
     title: {
         type: String,
-        required: true
+        required: true,
+        minlength: 3
     },
     destination: {
         type: String,
@@ -35,20 +37,16 @@ const NotesSchema = new Schema({
     description: {
         type: String,
         required: true,
-        unique: true
+        minlength: 5
     },
     tag: {
         type: String,
         default: "General"
     },
-    date: {
-        type: Date,
-        default: Date.now
-    },
     aiPlanned: { 
         type: Boolean, 
         default: false 
     }
-});
+}, { timestamps: true }); // adds createdAt and updatedAt
 
 module.exports = mongoose.model('notes', NotesSchema);

@@ -112,4 +112,16 @@ router.delete('/deletenote/:id', fetchuser, async (req, res) => {
     }
 });
 
+// Route 5: Get all notes from all users: GET "/api/notes/newsfeed" . Public or admin use
+router.get('/newsfeed', async (req, res) => {
+    try {
+        const notes = await Notes.find().sort({ createdAt: -1 }); // newest first
+        res.json(notes);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+
 module.exports = router;
