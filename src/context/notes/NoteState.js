@@ -12,13 +12,31 @@ const NoteState = (props) => {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'auth-token': localStorage.getItem('token') // Replace with valid token
+                    'auth-token': localStorage.getItem('token')
                 }
             });
             const json = await response.json();
             setNotes(json);
         } catch (error) {
             console.error("Error fetching notes:", error);
+        }
+    };
+
+    // ✅ Get a single Note by ID
+    const getNoteById = async (id) => {
+        try {
+            const response = await fetch(`${host}/api/notes/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token': localStorage.getItem('token')
+                }
+            });
+            const note = await response.json();
+            return note;
+        } catch (error) {
+            console.error("Error fetching note by ID:", error);
+            return null;
         }
     };
 
@@ -29,7 +47,7 @@ const NoteState = (props) => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    "auth-token": localStorage.getItem('token') // Replace with valid token
+                    "auth-token": localStorage.getItem('token')
                 },
                 body: JSON.stringify({ title, destination, startDate, endDate, budget, travelType, description, tag })
             });
@@ -43,15 +61,13 @@ const NoteState = (props) => {
     // Delete a Note
     const deleteNote = async (id) => {
         try {
-            const response = await fetch(`${host}/api/notes/deletenote/${id}`, {
+            await fetch(`${host}/api/notes/deletenote/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    "auth-token": localStorage.getItem('token') // Replace with valid token
+                    "auth-token": localStorage.getItem('token')
                 }
             });
-            const json = await response.json();
-            console.log(json);
 
             const newNotes = notes.filter((note) => note._id !== id);
             setNotes(newNotes);
@@ -63,21 +79,18 @@ const NoteState = (props) => {
     // Edit a Note
     const editNote = async (id, title, destination, startDate, endDate, budget, travelType, description, tag) => {
         try {
-            const response = await fetch(`${host}/api/notes/updatenote/${id}`, {
+            await fetch(`${host}/api/notes/updatenote/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    "auth-token": localStorage.getItem('token') // Replace with valid token
+                    "auth-token": localStorage.getItem('token')
                 },
                 body: JSON.stringify({ title, destination, startDate, endDate, budget, travelType, description, tag })
             });
-            const json = await response.json();
-            console.log(json);
 
             let newNotes = JSON.parse(JSON.stringify(notes)); // Deep copy of notes
             for (let index = 0; index < notes.length; index++) {
-                const element = notes[index];
-                if (element._id === id) {
+                if (newNotes[index]._id === id) {
                     newNotes[index].title = title;
                     newNotes[index].destination = destination;
                     newNotes[index].startDate = startDate;
@@ -96,7 +109,14 @@ const NoteState = (props) => {
     };
 
     return (
-        <NoteContext.Provider value={{ notes, addNote, deleteNote, editNote, getNotes }}>
+        <NoteContext.Provider value={{
+            notes,
+            addNote,
+            deleteNote,
+            editNote,
+            getNotes,
+            getNoteById // ✅ include this in the context value
+        }}>
             {props.children}
         </NoteContext.Provider>
     );

@@ -123,5 +123,23 @@ router.get('/newsfeed', async (req, res) => {
     }
 });
 
+// Route 6: Get a single note by ID: GET "/api/notes/:id" . Public access
+router.get('/:id', async (req, res) => {
+    try {
+        const note = await Notes.findById(req.params.id);
+
+        if (!note) {
+            return res.status(404).json({ error: "Note not found" });
+        }
+
+        res.json(note);
+    } catch (error) {
+        console.error("Error fetching note by ID:", error.message);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+
+
 
 module.exports = router;
