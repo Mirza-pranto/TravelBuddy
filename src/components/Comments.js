@@ -7,8 +7,27 @@ import AddComment from './AddComment';
 const Comments = ({ noteId, showAlert }) => {
     const context = useContext(commentContext);
     const navigate = useNavigate();
+    
+    // All hooks must be called at the top level, before any conditional logic
+    const ref = useRef(null);
+    const refClose = useRef(null);
+    const [comment, setComment] = useState({
+        id: "",
+        text: ""
+    });
 
-    // Add error handling for undefined context
+    useEffect(() => {
+        if (context && localStorage.getItem('token')) {
+            if (noteId) {
+                context.getComments(noteId);
+            }
+        } else if (!localStorage.getItem('token')) {
+            navigate('/login');
+        }
+        // eslint-disable-next-line
+    }, [noteId, context, navigate]);
+
+    // Add error handling for undefined context AFTER all hooks
     if (!context) {
         return (
             <div className="alert alert-danger" role="alert">
@@ -18,24 +37,6 @@ const Comments = ({ noteId, showAlert }) => {
     }
 
     const { comments = [], getComments, editComment } = context;
-
-    useEffect(() => {
-        if (localStorage.getItem('token')) {
-            if (noteId) {
-                getComments(noteId);
-            }
-        } else {
-            navigate('/login');
-        }
-        // eslint-disable-next-line
-    }, [noteId]);
-
-    const ref = useRef(null);
-    const refClose = useRef(null);
-    const [comment, setComment] = useState({
-        id: "",
-        text: ""
-    });
 
     const updateComment = (currentComment) => {
         ref.current.click();
