@@ -13,6 +13,8 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import CreatePost from './components/CreatePost';
 import Dashboard from './components/Dashboard';
+import CommentState from './context/comments/CommentState';
+import CommentContext from './context/comments/commentContext';
 import Postcard from './components/Postcard'; // Capitalized for convention
 import React, { useState } from 'react';
 
@@ -30,6 +32,7 @@ function App() {
 
   return (
     <NoteState>
+      <CommentState>
       <Router>
         <Navbar />
         <Alert alert={alert} />
@@ -42,9 +45,11 @@ function App() {
             <Route exact path="/createpost" element={<CreatePost showAlert={showAlert} />} />
             <Route exact path="/dashboard" element={<Dashboard showAlert={showAlert} />} />
             <Route exact path="/post/:id" element={<Postcard showAlert={showAlert} />} />
+            
           </Routes>
         </div>
       </Router>
+      </CommentState>
     </NoteState>
   );
 }

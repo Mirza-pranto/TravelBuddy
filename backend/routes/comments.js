@@ -69,4 +69,60 @@ router.post('/addcomment/:noteId', fetchuser, [
         res.status(500).json({ error: "Internal Server Error", details: error.message });
     }
 });
+
+// Delete comment
+router.delete('/deletecomment/:id', fetchuser, async (req, res) => {
+    try {
+        const comment = await Comments.findById(req.params.id);
+        if (!comment) {
+            return res.status(404).json({ error: "Comment not found" });
+        }
+        
+        // Check if user owns this comment
+        if (comment.user.toString() !== req.user.id) {
+            return res.status(401).json({ error: "Not authorized" });
+        }
+        
+        await Comments.findByIdAndDelete(req.params.id);
+        res.json({ success: "Comment deleted successfully" });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+// Update comment
+router.put('/updatecomment/:id', fetchuser, [
+    body('text', 'Comment text is required').notEmpty()
+], async (req, res) => {
+    try {
+        const { text } = req.body;
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const comment = await Comments.findById(req.params.id);
+        if (!comment) {
+            return res.status(404).json({ error: "Comment not found" });
+        }
+        
+        // Check if user owns this comment
+        if (comment.user.toString() !== req.user.id) {
+            return res.status(401).json({ error: "Not authorized" });
+        }
+        
+        const updatedComment = await Comments.findByIdAndUpdate(
+            req.params.id,
+            { text },
+            { new: true }
+        );
+        
+        res.json(updatedComment);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 module.exports = router;

@@ -1,5 +1,4 @@
-// src/context/comments/commentContext.js
-import { createContext } from 'react';
+import { createContext } from "react";
 
 const commentContext = createContext();
 
