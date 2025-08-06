@@ -15,11 +15,19 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/notes', require('./routes/notes'));
 
+app.use('/api/comments', require('./routes/comments'));
+
+
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
 app.listen(port, () => {
-  console.log(`iNotebook backend listening on port ${port}`);
+  console.log(`TravelBuddy backend listening on port ${port}`);
+});
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
 });

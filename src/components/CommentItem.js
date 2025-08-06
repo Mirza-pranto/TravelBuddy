@@ -2,31 +2,31 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
-import noteContext from '../context/notes/noteContext';
+import CommnetContext from '../context/Comments/noteContext';
 
-const Noteitem = (props) => {
-    const context = React.useContext(noteContext);
-    const { deleteNote } = context;
-    const { note, updateNote, showAlert, editable = true } = props;
+const Commentitem = (props) => {
+    const context = React.useContext(CommentContext);
+    const { deleteComment } = context;
+    const { comment, updateComment, showAlert, editable = true } = props;
 
     const handleActionClick = (e, action) => {
         e.preventDefault();
         e.stopPropagation();
         if (action === 'edit') {
-            updateNote(note);
+            updateNote(comment);
         } else if (action === 'delete') {
-            deleteNote(note._id);
-            if (showAlert) showAlert("Note deleted successfully", "success");
+            deleteNote(comment._id);
+            if (showAlert) showAlert("comment deleted successfully", "success");
         }
     };
 
     return (
         <div className="col-md-4 my-3 ">
-            <Link to={`/post/${note._id}`} className="text-decoration-none " style={{ color: 'inherit' }}>
+            <Link to={`/post/${comment._id}`} className="text-decoration-none " style={{ color: 'inherit' }}>
                 <div className="card my-3 shadow-sm" style={{ minHeight: '100%' }}>
                     <div className="card-body d-flex flex-column bg-light">
                         <div className='d-flex align-items-start justify-content-between'>
-                            <h5 className="card-title">{note.title}</h5>
+                            <h5 className="card-title">{comment.title}</h5>
                             {editable && (
                                 <div>
                                     <FontAwesomeIcon
@@ -42,12 +42,8 @@ const Noteitem = (props) => {
                                 </div>
                             )}
                         </div>
-                        <p className="card-text"><strong>Destination:</strong> {note.destination}</p>
-                        <p className="card-text"><strong>Travel Type:</strong> {note.travelType}</p>
-                        <p className="card-text"><strong>Budget:</strong> ${note.budget}</p>
-                        <p className="card-text"><strong>Start:</strong> {new Date(note.startDate).toLocaleDateString()}</p>
-                        <p className="card-text"><strong>End:</strong> {new Date(note.endDate).toLocaleDateString()}</p>
-                        <p className="card-text">{note.description}</p>
+                        <p className="card-text"><strong>Comment:</strong> {comment.text}</p>
+                        
                     </div>
                 </div>
             </Link>
@@ -55,4 +51,4 @@ const Noteitem = (props) => {
     );
 };
 
-export default Noteitem;
+export default CommentItem;
