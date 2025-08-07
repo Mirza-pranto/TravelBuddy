@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Noteitem from './Noteitem';
+import { useAuth } from '../context/AuthContext';
 
 const Home = (props) => {
     const [allNotes, setAllNotes] = useState([]);
