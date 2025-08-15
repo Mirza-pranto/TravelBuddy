@@ -7,10 +7,18 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize from localStorage on mount
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    if (user && token) {
-      setCurrentUser(JSON.parse(user));
+    try {
+      const userString = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      if (userString && token) {
+        const parsedUser = JSON.parse(userString);
+        if (parsedUser) {
+          setCurrentUser(parsedUser);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load user from localStorage:', error);
+      localStorage.removeItem('user'); // Clean bad data
     }
   }, []);
 

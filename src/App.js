@@ -17,7 +17,7 @@ import CommentState from './context/comments/CommentState';
 import CommentContext from './context/comments/commentContext';
 import Postcard from './components/Postcard'; // Capitalized for convention
 import React, { useState } from 'react';
-
+import { AuthProvider } from './context/authContext';
 function App() {
   const [alert, setAlert] = useState(null);
   const showAlert = (message, type) => {
@@ -31,6 +31,7 @@ function App() {
   };
 
   return (
+    <AuthProvider>
     <NoteState>
       <CommentState>
       <Router>
@@ -51,6 +52,7 @@ function App() {
       </Router>
       </CommentState>
     </NoteState>
+    </AuthProvider>
   );
 }
 

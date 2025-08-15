@@ -45,8 +45,8 @@ const Noteitem = (props) => {
                         <p className="card-text"><strong>Destination:</strong> {note.destination}</p>
                         <p className="card-text"><strong>Travel Type:</strong> {note.travelType}</p>
                         <p className="card-text"><strong>Budget:</strong> ${note.budget}</p>
-                        <p className="card-text"><strong>Start:</strong> {new Date(note.startDate).toLocaleDateString()}</p>
-                        <p className="card-text"><strong>End:</strong> {new Date(note.endDate).toLocaleDateString()}</p>
+                        <p className="card-text"><strong>Travel Date:</strong> {new Date(note.startDate).toLocaleDateString()} <b>to</b> {new Date(note.endDate).toLocaleDateString()}</p>
+
                         <p className="card-text">{note.description}</p>
                     </div>
                 </div>

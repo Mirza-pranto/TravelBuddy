@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Noteitem from './Noteitem';
 
+
 const Home = (props) => {
     const [allNotes, setAllNotes] = useState([]);
     const [filteredNotes, setFilteredNotes] = useState([]);
