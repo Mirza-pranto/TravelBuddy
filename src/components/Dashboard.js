@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faEnvelope, faPhone, faIdCard, faPen, faStar, faMapMarked, faCalendar, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faEnvelope, faPhone, faIdCard, faPen, faStar, faMapMarked, faCalendar, faSave, faTimes, faCamera } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../context/authContext';
 
 const Dashboard = (props) => {
     const [userData, setUserData] = useState(null);
@@ -13,9 +14,12 @@ const Dashboard = (props) => {
         name: '',
         email: '',
         phoneNumber: '',
-        bio: '',
-        profilePic: ''
+        bio: ''
     });
+    const [profilePicFile, setProfilePicFile] = useState(null);
+    const [profilePicPreview, setProfilePicPreview] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const { currentUser, login } = useAuth();
 
     // Update editFormData when userData is loaded
     useEffect(() => {
@@ -24,8 +28,7 @@ const Dashboard = (props) => {
                 name: userData.name || '',
                 email: userData.email || '',
                 phoneNumber: userData.phoneNumber || '',
-                bio: userData.bio || '',
-                profilePic: userData.profilePic || ''
+                bio: userData.bio || ''
             });
         }
     }, [userData]);
@@ -38,10 +41,70 @@ const Dashboard = (props) => {
         });
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                props.showAlert("File size should be less than 5MB", "danger");
+                return;
+            }
+            
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                props.showAlert("Please select a valid image file (JPEG, PNG, GIF, WEBP)", "danger");
+                return;
+            }
+            
+            setProfilePicFile(file);
+            
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfilePicPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const uploadProfilePic = async () => {
+        if (!profilePicFile) return null;
+        
+        const formData = new FormData();
+        formData.append('profilePic', profilePicFile);
+        
+        try {
+            const response = await fetch("http://localhost:5000/api/auth/upload-profile-pic", {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                return result.filePath;
+            } else {
+                throw new Error(result.error || 'Upload failed');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            throw error;
+        }
+    };
+
     // Handle form submission
     const handleEditSubmit = async (e) => {
         e.preventDefault();
+        setUploading(true);
+        
         try {
+            let profilePicPath = userData.profilePic; // Keep existing if no new file
+            
+            // Upload new profile picture if selected
+            if (profilePicFile) {
+                profilePicPath = await uploadProfilePic();
+            }
+
             const token = localStorage.getItem('token');
             const response = await fetch("http://localhost:5000/api/auth/updateuser", {
                 method: 'PUT',
@@ -49,20 +112,32 @@ const Dashboard = (props) => {
                     'Content-Type': 'application/json',
                     'auth-token': token
                 },
-                body: JSON.stringify(editFormData)
+                body: JSON.stringify({
+                    ...editFormData,
+                    profilePic: profilePicPath
+                })
             });
 
             const data = await response.json();
             if (data.success) {
-                setUserData({ ...userData, ...editFormData });
+                const updatedUserData = { ...userData, ...editFormData, profilePic: profilePicPath };
+                setUserData(updatedUserData);
+                
+                // Update auth context with new user data
+                login(updatedUserData, token);
+                
                 setIsEditing(false);
+                setProfilePicFile(null);
+                setProfilePicPreview(null);
                 props.showAlert("Profile updated successfully", "success");
             } else {
-                props.showAlert("Failed to update profile", "danger");
+                props.showAlert(data.error || "Failed to update profile", "danger");
             }
         } catch (error) {
             console.error("Error updating profile:", error);
             props.showAlert("Error updating profile", "danger");
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -96,6 +171,12 @@ const Dashboard = (props) => {
         }
     };
 
+    const getProfilePicUrl = (profilePic) => {
+        if (!profilePic) return "https://via.placeholder.com/150";
+        if (profilePic.startsWith('http')) return profilePic; // External URL
+        return `http://localhost:5000${profilePic}`; // Local file path
+    };
+
     if (loading) {
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
@@ -121,18 +202,33 @@ const Dashboard = (props) => {
                 <div className="col-md-3">
                     <div className="card shadow-sm">
                         <div className="card-body text-center">
-                            <img
-                                src={userData.profilePic || "https://via.placeholder.com/150"}
-                                alt="Profile"
-                                className="rounded-circle img-thumbnail mb-3"
-                                style={{ width: '150px', height: '150px', objectFit: 'cover' }}
-                            />
+                            <div className="position-relative d-inline-block">
+                                <img
+                                    src={profilePicPreview || getProfilePicUrl(userData.profilePic)}
+                                    alt="Profile"
+                                    className="rounded-circle img-thumbnail mb-3"
+                                    style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+                                />
+                                {isEditing && (
+                                    <div className="position-absolute bottom-0 end-0">
+                                        <label htmlFor="profilePicInput" className="btn btn-success btn-sm rounded-circle" style={{ width: '40px', height: '40px' }}>
+                                            <FontAwesomeIcon icon={faCamera} />
+                                        </label>
+                                        <input
+                                            type="file"
+                                            id="profilePicInput"
+                                            className="d-none"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                        />
+                                    </div>
+                                )}
+                            </div>
                             <h5 className="card-title">{userData.name}</h5>
                             <p className="text-muted">
                                 <FontAwesomeIcon icon={faMapMarked} className="me-2" />
                                 Travel Enthusiast
                             </p>
-                            
                             
                             {/* Quick Stats */}
                             <div className="list-group mt-4">
@@ -198,22 +294,34 @@ const Dashboard = (props) => {
                                                 <button 
                                                     className="btn btn-success btn-sm me-2"
                                                     onClick={handleEditSubmit}
+                                                    disabled={uploading}
                                                 >
-                                                    <FontAwesomeIcon icon={faSave} className="me-2" />
-                                                    Save
+                                                    {uploading ? (
+                                                        <>
+                                                            <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                            Saving...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <FontAwesomeIcon icon={faSave} className="me-2" />
+                                                            Save
+                                                        </>
+                                                    )}
                                                 </button>
                                                 <button 
                                                     className="btn btn-secondary btn-sm"
                                                     onClick={() => {
                                                         setIsEditing(false);
+                                                        setProfilePicFile(null);
+                                                        setProfilePicPreview(null);
                                                         setEditFormData({
                                                             name: userData.name,
                                                             email: userData.email,
                                                             phoneNumber: userData.phoneNumber,
-                                                            bio: userData.bio,
-                                                            profilePic: userData.profilePic
+                                                            bio: userData.bio
                                                         });
                                                     }}
+                                                    disabled={uploading}
                                                 >
                                                     <FontAwesomeIcon icon={faTimes} className="me-2" />
                                                     Cancel
@@ -254,16 +362,6 @@ const Dashboard = (props) => {
                                                         className="form-control"
                                                         name="phoneNumber"
                                                         value={editFormData.phoneNumber}
-                                                        onChange={handleEditChange}
-                                                    />
-                                                </div>
-                                                <div className="col-md-12">
-                                                    <label className="form-label">Profile Picture URL</label>
-                                                    <input
-                                                        type="url"
-                                                        className="form-control"
-                                                        name="profilePic"
-                                                        value={editFormData.profilePic}
                                                         onChange={handleEditChange}
                                                     />
                                                 </div>
