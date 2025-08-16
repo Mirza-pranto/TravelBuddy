@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faEnvelope, faPhone, faIdCard, faPen, faStar, faMapMarked, faCalendar, faSave, faTimes, faCamera } from '@fortawesome/free-solid-svg-icons';
-import { useAuth } from '../context/authContext';
+import UserContext from '../context/userContext';
 
 const Dashboard = (props) => {
-    const [userData, setUserData] = useState(null);
+    const context = useContext(UserContext);
+    const { user, updateUser, refreshUser, getProfilePicUrl } = context;
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('profile');
     const navigate = useNavigate();
@@ -19,19 +20,33 @@ const Dashboard = (props) => {
     const [profilePicFile, setProfilePicFile] = useState(null);
     const [profilePicPreview, setProfilePicPreview] = useState(null);
     const [uploading, setUploading] = useState(false);
-    const { currentUser, login } = useAuth();
 
-    // Update editFormData when userData is loaded
+    // Update editFormData when user data is loaded
     useEffect(() => {
-        if (userData) {
+        if (user) {
             setEditFormData({
-                name: userData.name || '',
-                email: userData.email || '',
-                phoneNumber: userData.phoneNumber || '',
-                bio: userData.bio || ''
+                name: user.name || '',
+                email: user.email || '',
+                phoneNumber: user.phoneNumber || '',
+                bio: user.bio || ''
             });
+            setLoading(false);
+        } else {
+            // If no user data, try to refresh from server
+            const token = localStorage.getItem('token');
+            if (token) {
+                refreshUser().then((success) => {
+                    if (!success) {
+                        navigate('/login');
+                    }
+                    setLoading(false);
+                });
+            } else {
+                navigate('/login');
+                setLoading(false);
+            }
         }
-    }, [userData]);
+    }, [user, navigate, refreshUser]);
 
     // Handle form changes
     const handleEditChange = (e) => {
@@ -98,7 +113,7 @@ const Dashboard = (props) => {
         setUploading(true);
         
         try {
-            let profilePicPath = userData.profilePic; // Keep existing if no new file
+            let profilePicPath = user.profilePic; // Keep existing if no new file
             
             // Upload new profile picture if selected
             if (profilePicFile) {
@@ -120,11 +135,17 @@ const Dashboard = (props) => {
 
             const data = await response.json();
             if (data.success) {
-                const updatedUserData = { ...userData, ...editFormData, profilePic: profilePicPath };
-                setUserData(updatedUserData);
+                const updatedUserData = { 
+                    ...user, 
+                    ...editFormData, 
+                    profilePic: profilePicPath 
+                };
                 
-                // Update auth context with new user data
-                login(updatedUserData, token);
+                // Update user context
+                updateUser(updatedUserData);
+                
+                // Also update localStorage for auth context compatibility
+                localStorage.setItem('user', JSON.stringify(updatedUserData));
                 
                 setIsEditing(false);
                 setProfilePicFile(null);
@@ -141,42 +162,6 @@ const Dashboard = (props) => {
         }
     };
 
-    useEffect(() => {
-        fetchUserData();
-    }, []);
-
-    const fetchUserData = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/login');
-                return;
-            }
-
-            const response = await fetch("http://localhost:5000/api/auth/getuser", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'auth-token': token
-                }
-            });
-
-            const data = await response.json();
-            setUserData(data);
-        } catch (error) {
-            console.error("Error fetching user data:", error);
-            props.showAlert("Error loading profile", "danger");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const getProfilePicUrl = (profilePic) => {
-        if (!profilePic) return "https://via.placeholder.com/150";
-        if (profilePic.startsWith('http')) return profilePic; // External URL
-        return `http://localhost:5000${profilePic}`; // Local file path
-    };
-
     if (loading) {
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
@@ -187,7 +172,7 @@ const Dashboard = (props) => {
         );
     }
 
-    if (!userData) {
+    if (!user) {
         return (
             <div className="alert alert-danger text-center m-5" role="alert">
                 No user data found. Please try logging in again.
@@ -204,7 +189,7 @@ const Dashboard = (props) => {
                         <div className="card-body text-center">
                             <div className="position-relative d-inline-block">
                                 <img
-                                    src={profilePicPreview || getProfilePicUrl(userData.profilePic)}
+                                    src={profilePicPreview || (user.profilePicUrl || getProfilePicUrl(user.profilePic))}
                                     alt="Profile"
                                     className="rounded-circle img-thumbnail mb-3"
                                     style={{ width: '150px', height: '150px', objectFit: 'cover' }}
@@ -224,7 +209,7 @@ const Dashboard = (props) => {
                                     </div>
                                 )}
                             </div>
-                            <h5 className="card-title">{userData.name}</h5>
+                            <h5 className="card-title">{user.name}</h5>
                             <p className="text-muted">
                                 <FontAwesomeIcon icon={faMapMarked} className="me-2" />
                                 Travel Enthusiast
@@ -235,7 +220,7 @@ const Dashboard = (props) => {
                                 <div className="list-group-item">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <span>Tours</span>
-                                        <span className="badge bg-success rounded-pill">{userData.totalTours || 0}</span>
+                                        <span className="badge bg-success rounded-pill">{user.totalTours || 0}</span>
                                     </div>
                                 </div>
                                 <div className="list-group-item">
@@ -243,7 +228,7 @@ const Dashboard = (props) => {
                                         <span>Rating</span>
                                         <span>
                                             <FontAwesomeIcon icon={faStar} className="text-warning me-1" />
-                                            {userData.averageRating || 0}
+                                            {user.averageRating || 0}
                                         </span>
                                     </div>
                                 </div>
@@ -315,10 +300,10 @@ const Dashboard = (props) => {
                                                         setProfilePicFile(null);
                                                         setProfilePicPreview(null);
                                                         setEditFormData({
-                                                            name: userData.name,
-                                                            email: userData.email,
-                                                            phoneNumber: userData.phoneNumber,
-                                                            bio: userData.bio
+                                                            name: user.name,
+                                                            email: user.email,
+                                                            phoneNumber: user.phoneNumber,
+                                                            bio: user.bio
                                                         });
                                                     }}
                                                     disabled={uploading}
@@ -382,21 +367,21 @@ const Dashboard = (props) => {
                                             <div className="col-md-6">
                                                 <div className="mb-3">
                                                     <h6><FontAwesomeIcon icon={faUser} className="me-2" /> Name</h6>
-                                                    <p>{userData.name}</p>
+                                                    <p>{user.name}</p>
                                                 </div>
                                                 <div className="mb-3">
                                                     <h6><FontAwesomeIcon icon={faEnvelope} className="me-2" /> Email</h6>
-                                                    <p>{userData.email}</p>
+                                                    <p>{user.email}</p>
                                                 </div>
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="mb-3">
                                                     <h6><FontAwesomeIcon icon={faPhone} className="me-2" /> Phone</h6>
-                                                    <p>{userData.phoneNumber || 'Not provided'}</p>
+                                                    <p>{user.phoneNumber || 'Not provided'}</p>
                                                 </div>
                                                 <div className="mb-3">
                                                     <h6><FontAwesomeIcon icon={faIdCard} className="me-2" /> Bio</h6>
-                                                    <p>{userData.bio || 'No bio provided'}</p>
+                                                    <p>{user.bio || 'No bio provided'}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -414,8 +399,8 @@ const Dashboard = (props) => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {userData.pastTours && userData.pastTours.length > 0 ? (
-                                                userData.pastTours.map((tour, index) => (
+                                            {user.pastTours && user.pastTours.length > 0 ? (
+                                                user.pastTours.map((tour, index) => (
                                                     <tr key={index}>
                                                         <td>{tour.destination}</td>
                                                         <td>{new Date(tour.startDate).toLocaleDateString()}</td>
