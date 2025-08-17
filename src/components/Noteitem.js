@@ -1,7 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faTrash, 
+  faPenToSquare, 
+  faStar, 
+  faMapMarkerAlt, 
+  faCalendar, 
+  faDollarSign,
+  faImage
+} from '@fortawesome/free-solid-svg-icons';
 import noteContext from '../context/notes/noteContext';
 
 const Noteitem = (props) => {
@@ -20,37 +28,216 @@ const Noteitem = (props) => {
         }
     };
 
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return null;
+        if (imagePath.startsWith('http')) return imagePath;
+        return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${imagePath}`;
+    };
+
+    const getProfilePicUrl = (profilePic) => {
+        if (!profilePic) return "https://via.placeholder.com/40?text=User";
+        if (profilePic.startsWith('http')) return profilePic;
+        return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${profilePic}`;
+    };
+
+    const renderStars = (rating) => {
+        const stars = [];
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+
+        for (let i = 0; i < 5; i++) {
+            if (i < fullStars) {
+                stars.push(<FontAwesomeIcon key={i} icon={faStar} className="text-warning" />);
+            } else if (i === fullStars && hasHalfStar) {
+                stars.push(<FontAwesomeIcon key={i} icon={faStar} className="text-warning" style={{ opacity: 0.5 }} />);
+            } else {
+                stars.push(<FontAwesomeIcon key={i} icon={faStar} className="text-muted" />);
+            }
+        }
+        return stars;
+    };
+
+    // Get the display image (featured image or first image from array)
+    const displayImage = note.featuredImage || 
+                       (note.images && note.images.length > 0 ? note.images[0] : null);
+
     return (
-        <div className="col-md-4 my-3 ">
-            <Link to={`/post/${note._id}`} className="text-decoration-none " style={{ color: 'inherit' }}>
-                <div className="card my-3 shadow-sm" style={{ minHeight: '100%' }}>
-                    <div className="card-body d-flex flex-column bg-light">
-                        <div className='d-flex align-items-start justify-content-between'>
-                            <h5 className="card-title">{note.title}</h5>
+        <div className="col-md-4 my-3">
+            <div className="card h-100 shadow-sm hover-shadow">
+                {/* Image Section */}
+                <div className="position-relative" style={{ height: '200px', overflow: 'hidden' }}>
+                    {displayImage ? (
+                        <img 
+                            src={getImageUrl(displayImage)} 
+                            alt={note.title}
+                            className="card-img-top h-100"
+                            style={{ 
+                                objectFit: 'cover',
+                                width: '100%'
+                            }}
+                            onError={(e) => {
+                                e.target.onerror = null; 
+                                e.target.src = "https://via.placeholder.com/300x200?text=Image+Not+Found";
+                                e.target.className = "card-img-top h-100 bg-light";
+                            }}
+                        />
+                    ) : (
+                        <div className="d-flex flex-column align-items-center justify-content-center h-100 bg-light text-muted">
+                            <FontAwesomeIcon icon={faImage} size="3x" />
+                            <span>No Image</span>
+                        </div>
+                    )}
+                    
+                    {/* Travel Type Badge */}
+                    <span className={`badge position-absolute top-0 end-0 m-2 ${
+                        note.travelType === 'Adventure' ? 'bg-danger' :
+                        note.travelType === 'Relax' ? 'bg-info' :
+                        note.travelType === 'Cultural' ? 'bg-primary' :
+                        note.travelType === 'Backpacking' ? 'bg-warning' : 'bg-secondary'
+                    }`}>
+                        {note.travelType}
+                    </span>
+                    
+                    {/* Additional Images Count */}
+                    {note.images && note.images.length > 1 && (
+                        <span className="badge bg-dark position-absolute bottom-0 end-0 m-2">
+                            +{note.images.length - 1} more
+                        </span>
+                    )}
+                </div>
+
+                <div className="card-body d-flex flex-column">
+                    {/* Author Info */}
+                    {note.user && (
+                        <div className="d-flex align-items-center mb-3">
+                            <img 
+                                src={getProfilePicUrl(note.user.profilePic)} 
+                                alt={note.user.name}
+                                className="rounded-circle me-2"
+                                style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = "https://via.placeholder.com/40?text=User";
+                                }}
+                            />
+                            <div className="flex-grow-1">
+                                <h6 className="mb-0 fw-bold">{note.user.name}</h6>
+                                {note.user.averageRating > 0 && (
+                                    <div className="d-flex align-items-center">
+                                        <div className="me-1">
+                                            {renderStars(note.user.averageRating)}
+                                        </div>
+                                        <small className="text-muted">
+                                            ({note.user.totalRatings} reviews)
+                                        </small>
+                                    </div>
+                                )}
+                            </div>
                             {editable && (
                                 <div>
                                     <FontAwesomeIcon
                                         icon={faPenToSquare}
-                                        className="text-success me-2 mx-2 cursor-pointer"
+                                        className="text-success me-2 cursor-pointer"
                                         onClick={(e) => handleActionClick(e, 'edit')}
+                                        title="Edit note"
                                     />
                                     <FontAwesomeIcon
                                         icon={faTrash}
-                                        className="text-danger me-2 mx-2 cursor-pointer"
+                                        className="text-danger cursor-pointer"
                                         onClick={(e) => handleActionClick(e, 'delete')}
+                                        title="Delete note"
                                     />
                                 </div>
                             )}
                         </div>
-                        <p className="card-text"><strong>Destination:</strong> {note.destination}</p>
-                        <p className="card-text"><strong>Travel Type:</strong> {note.travelType}</p>
-                        <p className="card-text"><strong>Budget:</strong> ${note.budget}</p>
-                        <p className="card-text"><strong>Travel Date:</strong> {new Date(note.startDate).toLocaleDateString()} <b>to</b> {new Date(note.endDate).toLocaleDateString()}</p>
+                    )}
 
-                        <p className="card-text">{note.description}</p>
-                    </div>
+                    {/* Note Content */}
+                    <Link to={`/post/${note._id}`} className="text-decoration-none text-dark">
+                        <h5 className="card-title mb-3">{note.title}</h5>
+                        
+                        <div className="mb-2">
+                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-primary me-2" />
+                            <strong>{note.destination}</strong>
+                        </div>
+
+                        <div className="mb-2">
+                            <FontAwesomeIcon icon={faDollarSign} className="text-success me-2" />
+                            <span className="fw-bold">${note.budget}</span>
+                        </div>
+
+                        <div className="mb-2">
+                            <FontAwesomeIcon icon={faCalendar} className="text-info me-2" />
+                            <small className="text-muted">
+                                {new Date(note.startDate).toLocaleDateString()} - {new Date(note.endDate).toLocaleDateString()}
+                            </small>
+                        </div>
+
+                        <p className="card-text text-muted" style={{ 
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}>
+                            {note.description}
+                        </p>
+
+                        {note.tag && (
+                            <span className="badge bg-light text-dark border me-2">
+                                {note.tag}
+                            </span>
+                        )}
+
+                        {/* Posted Date */}
+                        {note.createdAt && (
+                            <div className="mt-auto pt-2">
+                                <small className="text-muted">
+                                    Posted on {new Date(note.createdAt).toLocaleDateString()}
+                                </small>
+                            </div>
+                        )}
+                    </Link>
                 </div>
-            </Link>
+
+                {/* Image Gallery Preview */}
+                {note.images && note.images.length > 1 && (
+                    <div className="card-footer bg-light p-2">
+                        <div className="d-flex overflow-auto" style={{ gap: '5px' }}>
+                            {note.images.slice(0, 4).map((image, index) => (
+                                <img 
+                                    key={index}
+                                    src={getImageUrl(image)} 
+                                    alt={`Tour ${index + 1}`}
+                                    className="rounded"
+                                    style={{ 
+                                        width: '50px', 
+                                        height: '50px', 
+                                        objectFit: 'cover',
+                                        flexShrink: 0
+                                    }}
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = "https://via.placeholder.com/50x50?text=Image";
+                                    }}
+                                />
+                            ))}
+                            {note.images.length > 4 && (
+                                <div 
+                                    className="d-flex align-items-center justify-content-center bg-secondary text-white rounded"
+                                    style={{ 
+                                        width: '50px', 
+                                        height: '50px',
+                                        fontSize: '12px',
+                                        flexShrink: 0
+                                    }}
+                                >
+                                    +{note.images.length - 4}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

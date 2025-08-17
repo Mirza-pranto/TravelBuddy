@@ -43,10 +43,20 @@ const NotesSchema = new Schema({
         type: String,
         default: "General"
     },
+    
     aiPlanned: { 
-        type: Boolean, 
-        default: false 
+        type: Boolean,
+        default: false
+    },
+    images: [{
+        type: String,
+        default: []
+    }],
+    featuredImage: {
+        type: String,
+        default: ''
     }
 }, { timestamps: true }); // adds createdAt and updatedAt
+
 
 module.exports = mongoose.model('notes', NotesSchema);

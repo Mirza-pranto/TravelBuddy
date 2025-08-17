@@ -4,10 +4,10 @@ const Notes = require('../models/Notes');
 var fetchuser = require('../middleware/fetchuser');
 const { body, validationResult } = require('express-validator');
 
-//Route 1: Get all the notes: GET "/api/notes/fetchallnotes" . Login required
+// Route 1: Get all the notes
 router.get('/fetchallnotes', fetchuser, async (req, res) => {
     try {
-        const notes = await Notes.find({ user: req.user.id });
+        const notes = await Notes.find({ user: req.user.id }).populate('user', 'name profilePic averageRating totalRatings');
         res.json(notes);
     } catch (error) {
         console.error(error.message);
@@ -115,7 +115,10 @@ router.delete('/deletenote/:id', fetchuser, async (req, res) => {
 // Route 5: Get all notes from all users: GET "/api/notes/newsfeed" . Public or admin use
 router.get('/newsfeed', async (req, res) => {
     try {
-        const notes = await Notes.find().sort({ createdAt: -1 }); // newest first
+        const notes = await Notes.find()
+            .sort({ createdAt: -1 }) // newest first
+            .populate('user', 'name profilePic averageRating totalRatings'); // populate user data
+        
         res.json(notes);
     } catch (error) {
         console.error(error.message);
@@ -124,9 +127,10 @@ router.get('/newsfeed', async (req, res) => {
 });
 
 // Route 6: Get a single note by ID: GET "/api/notes/:id" . Public access
+
 router.get('/:id', async (req, res) => {
     try {
-        const note = await Notes.findById(req.params.id);
+        const note = await Notes.findById(req.params.id).populate('user', 'name profilePic averageRating totalRatings');
 
         if (!note) {
             return res.status(404).json({ error: "Note not found" });

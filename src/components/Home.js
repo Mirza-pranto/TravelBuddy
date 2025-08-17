@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Noteitem from './Noteitem';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 const Home = (props) => {
     const [allNotes, setAllNotes] = useState([]);
@@ -9,18 +10,28 @@ const Home = (props) => {
         destination: "",
         date: ""
     });
+    const [loading, setLoading] = useState(true);
 
-    // Fetch all notes (tours) from backend
+    // Fetch all notes (tours) from backend with populated user data
     useEffect(() => {
         const fetchAllNotes = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/notes/newsfeed");
+                setLoading(true);
+                const response = await fetch("http://localhost:5000/api/notes/newsfeed?populate=user");
                 const json = await response.json();
-                console.log("Fetched Notes:", json); // Optional: for debugging
-                setAllNotes(json);
-                setFilteredNotes(json);
+                
+                // Transform the data to ensure user information is properly structured
+                const transformedNotes = json.map(note => ({
+                    ...note,
+                    user: note.user || { name: 'Unknown User' } // Fallback if user data is missing
+                }));
+                
+                setAllNotes(transformedNotes);
+                setFilteredNotes(transformedNotes);
             } catch (error) {
                 console.error("Failed to fetch newsfeed:", error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -58,6 +69,15 @@ const Home = (props) => {
         // eslint-disable-next-line
     }, [search]);
 
+    if (loading) {
+        return (
+            <div className="container my-3 text-center">
+                <FontAwesomeIcon icon={faSpinner} spin size="2x" className="text-primary" />
+                <p className="mt-2">Loading tours...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="container my-3">
             <h2 className="mb-4">🌍 TravelBuddy Newsfeed</h2>
@@ -86,10 +106,18 @@ const Home = (props) => {
 
             <div className="row">
                 {filteredNotes.length === 0 ? (
-                    <p>No tours found.</p>
+                    <div className="col-12 text-center py-5">
+                        <h4>No tours found</h4>
+                        <p className="text-muted">Try adjusting your search filters</p>
+                    </div>
                 ) : (
                     filteredNotes.map(note => (
-                        <Noteitem key={note._id} note={note} editable={false} />
+                        <Noteitem 
+                            key={note._id} 
+                            note={note} 
+                            editable={false} 
+                            showAlert={props.showAlert}
+                        />
                     ))
                 )}
             </div>

@@ -104,3 +104,45 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Internal Server Error' });
 });
+
+// Configure multer for note image uploads
+const noteImageStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, 'uploads/note-images');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
+        cb(null, uniqueName);
+    }
+});
+
+const uploadNoteImages = multer({
+    storage: noteImageStorage,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: fileFilter // Reuse the same filter from profile pics
+});
+
+// Route for uploading note images
+app.post('/api/notes/upload-images', uploadNoteImages.array('noteImages', 5), (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ error: 'No files uploaded' });
+        }
+        
+        const filePaths = req.files.map(file => `/uploads/note-images/${file.filename}`);
+        res.json({ 
+            success: true, 
+            filePaths,
+            message: 'Files uploaded successfully' 
+        });
+    } catch (error) {
+        console.error('File upload error:', error);
+        res.status(500).json({ error: 'File upload failed' });
+    }
+});
