@@ -1,27 +1,24 @@
-import React, { useState } from "react";
-import NoteContext from "./noteContext";
+// src/context/notes/NoteState.js - Updated version
+import React, { useState } from 'react';
+import noteContext from './noteContext';
 
 const NoteState = (props) => {
-    const host = "http://localhost:5000";
+    const host = process.env.REACT_APP_API_URL || "http://localhost:5000";
     const notesInitial = [];
     const [notes, setNotes] = useState(notesInitial);
 
-    // Get all notes
+    // Get all Notes
     const getNotes = async () => {
-        try {
-            const response = await fetch(`${host}/api/notes/fetchallnotes`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    "auth-token": localStorage.getItem('token')
-                }
-            });
-            const json = await response.json();
-            console.log("Fetched notes:", json);
-            setNotes(json);
-        } catch (error) {
-            console.error("Error fetching notes:", error);
-        }
+        // API Call
+        const response = await fetch(`${host}/api/notes/fetchallnotes`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem('token')
+            }
+        });
+        const json = await response.json();
+        setNotes(json);
     };
 
     // Get a single note by ID
@@ -30,146 +27,115 @@ const NoteState = (props) => {
             const response = await fetch(`${host}/api/notes/${id}`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             });
+            const json = await response.json();
             
             if (response.ok) {
-                const json = await response.json();
                 return json;
             } else {
-                console.error("Failed to fetch note");
+                console.error('Error fetching note:', json.error);
                 return null;
             }
         } catch (error) {
-            console.error("Error fetching note by ID:", error);
+            console.error('Error fetching note:', error);
             return null;
         }
     };
 
-    // Add a note
+    // Add a Note
     const addNote = async (title, destination, startDate, endDate, budget, travelType, description, tag, images = [], featuredImage = '') => {
-        try {
-            const response = await fetch(`${host}/api/notes/addnote`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    "auth-token": localStorage.getItem('token')
-                },
-                body: JSON.stringify({
-                    title,
-                    destination,
-                    startDate,
-                    endDate,
-                    budget,
-                    travelType,
-                    description,
-                    tag,
-                    images,
-                    featuredImage
-                })
-            });
-
-            if (response.ok) {
-                const note = await response.json();
-                console.log("Adding a new note", note);
-                setNotes(notes.concat(note));
-                return true;
-            } else {
-                console.error("Failed to add note");
-                return false;
-            }
-        } catch (error) {
-            console.error("Error adding note:", error);
+        // API Call
+        const response = await fetch(`${host}/api/notes/addnote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem('token')
+            },
+            body: JSON.stringify({
+                title, 
+                destination, 
+                startDate, 
+                endDate, 
+                budget, 
+                travelType, 
+                description, 
+                tag,
+                images,
+                featuredImage
+            })
+        });
+        
+        const json = await response.json();
+        
+        if (json.errors) {
+            console.error('Validation errors:', json.errors);
+            return false;
+        }
+        
+        if (response.ok) {
+            setNotes(notes.concat(json));
+            return true;
+        } else {
+            console.error('Error adding note:', json);
             return false;
         }
     };
 
-    // Delete a note
+    // Delete a Note
     const deleteNote = async (id) => {
-        try {
-            const response = await fetch(`${host}/api/notes/deletenote/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    "auth-token": localStorage.getItem('token')
-                }
-            });
-
-            if (response.ok) {
-                console.log("Deleting the note with id " + id);
-                const newNotes = notes.filter((note) => { return note._id !== id });
-                setNotes(newNotes);
-                return true;
-            } else {
-                console.error("Failed to delete note");
-                return false;
+        // API Call
+        const response = await fetch(`${host}/api/notes/deletenote/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem('token')
             }
-        } catch (error) {
-            console.error("Error deleting note:", error);
-            return false;
-        }
+        });
+        const json = await response.json();
+        console.log(json);
+
+        const newNotes = notes.filter((note) => { return note._id !== id });
+        setNotes(newNotes);
     };
 
-    // Edit a note
-    const editNote = async (id, title, description, destination, startDate, endDate, budget, travelType, tag, images = [], featuredImage = '') => {
-        try {
-            const response = await fetch(`${host}/api/notes/updatenote/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    "auth-token": localStorage.getItem('token')
-                },
-                body: JSON.stringify({
-                    title,
-                    destination,
-                    startDate,
-                    endDate,
-                    budget,
-                    travelType,
-                    description,
-                    tag,
-                    images,
-                    featuredImage
-                })
-            });
+    // Edit a Note
+    const editNote = async (id, title, description, destination, startDate, endDate, budget, travelType, tag) => {
+        // API Call
+        const response = await fetch(`${host}/api/notes/updatenote/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem('token')
+            },
+            body: JSON.stringify({ title, description, destination, startDate, endDate, budget, travelType, tag })
+        });
+        const json = await response.json();
 
-            if (response.ok) {
-                const json = await response.json();
-                console.log("Editing note", json);
-
-                let newNotes = JSON.parse(JSON.stringify(notes));
-                // Logic to edit in client
-                for (let index = 0; index < newNotes.length; index++) {
-                    const element = newNotes[index];
-                    if (element._id === id) {
-                        newNotes[index] = json;
-                        break;
-                    }
-                }
-                setNotes(newNotes);
-                return true;
-            } else {
-                console.error("Failed to edit note");
-                return false;
+        let newNotes = JSON.parse(JSON.stringify(notes));
+        // Logic to edit in client
+        for (let index = 0; index < newNotes.length; index++) {
+            const element = newNotes[index];
+            if (element._id === id) {
+                newNotes[index].title = title;
+                newNotes[index].description = description;
+                newNotes[index].destination = destination;
+                newNotes[index].startDate = startDate;
+                newNotes[index].endDate = endDate;
+                newNotes[index].budget = budget;
+                newNotes[index].travelType = travelType;
+                newNotes[index].tag = tag;
+                break;
             }
-        } catch (error) {
-            console.error("Error editing note:", error);
-            return false;
         }
+        setNotes(newNotes);
     };
 
     return (
-        <NoteContext.Provider value={{
-            notes,
-            addNote,
-            deleteNote,
-            editNote,
-            getNotes,
-            getNoteById
-        }}>
+        <noteContext.Provider value={{ notes, addNote, deleteNote, editNote, getNotes, getNoteById }}>
             {props.children}
-        </NoteContext.Provider>
+        </noteContext.Provider>
     );
 };
 

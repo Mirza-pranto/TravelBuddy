@@ -43,7 +43,6 @@ const NotesSchema = new Schema({
         type: String,
         default: "General"
     },
-    
     aiPlanned: { 
         type: Boolean,
         default: false
@@ -55,8 +54,40 @@ const NotesSchema = new Schema({
     featuredImage: {
         type: String,
         default: ''
+    },
+    // New fields for tour requests and mates
+    joinRequests: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'user',
+            required: true
+        },
+        status: {
+            type: String,
+            enum: ['pending', 'accepted', 'rejected'],
+            default: 'pending'
+        },
+        requestedAt: {
+            type: Date,
+            default: Date.now
+        },
+        processedAt: {
+            type: Date
+        }
+    }],
+    tourMates: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user'
+    }],
+    maxTourMates: {
+        type: Number,
+        default: 10,
+        min: 1
     }
-}, { timestamps: true }); // adds createdAt and updatedAt
+}, { timestamps: true });
 
+// Index for efficient queries
+NotesSchema.index({ 'joinRequests.user': 1, 'joinRequests.status': 1 });
+NotesSchema.index({ 'tourMates': 1 });
 
 module.exports = mongoose.model('notes', NotesSchema);

@@ -11,6 +11,7 @@ import {
   faImage
 } from '@fortawesome/free-solid-svg-icons';
 import noteContext from '../context/notes/noteContext';
+import JoinRequestButton from './JoinRequestButton';
 
 const Noteitem = (props) => {
     const context = React.useContext(noteContext);
@@ -197,6 +198,17 @@ const Noteitem = (props) => {
                             </div>
                         )}
                     </Link>
+
+                    {/* Join Request Button - Only show for non-editable cards (public view) */}
+                    {!editable && (
+                        <div className="mt-3">
+                            <JoinRequestButton 
+                                tourId={note._id} 
+                                showAlert={showAlert}
+                                className="btn-sm w-100"
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Image Gallery Preview */}

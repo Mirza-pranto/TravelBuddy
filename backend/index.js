@@ -74,37 +74,6 @@ app.post('/api/auth/upload-profile-pic', upload.single('profilePic'), (req, res)
     }
 });
 
-// Error handling middleware for multer errors
-app.use((error, req, res, next) => {
-    if (error instanceof multer.MulterError) {
-        if (error.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
-        }
-    }
-    if (error.message === 'Only image files are allowed (JPEG, JPG, PNG, GIF, WEBP)') {
-        return res.status(400).json({ error: error.message });
-    }
-    next(error);
-});
-
-// Available routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/notes', require('./routes/notes'));
-app.use('/api/comments', require('./routes/comments'));
-
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
-
-app.listen(port, () => {
-    console.log(`TravelBuddy backend listening on port ${port}`);
-});
-
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Internal Server Error' });
-});
-
 // Configure multer for note image uploads
 const noteImageStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -145,4 +114,36 @@ app.post('/api/notes/upload-images', uploadNoteImages.array('noteImages', 5), (r
         console.error('File upload error:', error);
         res.status(500).json({ error: 'File upload failed' });
     }
+});
+
+// Error handling middleware for multer errors
+app.use((error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
+        }
+    }
+    if (error.message === 'Only image files are allowed (JPEG, JPG, PNG, GIF, WEBP)') {
+        return res.status(400).json({ error: error.message });
+    }
+    next(error);
+});
+
+// Available routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/notes', require('./routes/notes'));
+app.use('/api/comments', require('./routes/comments'));
+app.use('/api/tour-requests', require('./routes/tourRequests')); // New route
+
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
+
+app.listen(port, () => {
+    console.log(`TravelBuddy backend listening on port ${port}`);
+});
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
 });

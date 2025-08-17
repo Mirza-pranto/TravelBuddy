@@ -9,18 +9,28 @@ import {
   faUsers, 
   faTag,
   faImage,
-  faTimes
+  faTimes,
+  faCog
 } from '@fortawesome/free-solid-svg-icons';
 import noteContext from '../context/notes/noteContext';
+import tourRequestsContext from '../context/tourRequests/tourRequestsContext';
 import Comments from './Comments';
+import JoinRequestButton from './JoinRequestButton';
+import TourRequestsManager from './TourRequestsManager';
 
 const Postcard = ({ showAlert }) => {
     const { id } = useParams();
     const context = useContext(noteContext);
+    const tourContext = useContext(tourRequestsContext);
+    
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [showManageRequests, setShowManageRequests] = useState(false);
+
+    const { requestStatus } = tourContext;
+    const tourStatus = requestStatus[id];
 
     // Helper function to calculate trip duration in days
     const calculateTripDuration = (startDate, endDate) => {
@@ -155,9 +165,28 @@ const Postcard = ({ showAlert }) => {
                                 <small className="text-muted">
                                     Posted on {new Date(post.createdAt).toLocaleDateString()}
                                 </small>
+                                {/* Manage Requests Button for Tour Creator */}
+                                {tourStatus?.isCreator && (
+                                    <div className="mt-2">
+                                        <button 
+                                            className="btn btn-outline-primary btn-sm"
+                                            onClick={() => setShowManageRequests(!showManageRequests)}
+                                        >
+                                            <FontAwesomeIcon icon={faCog} className="me-2" />
+                                            Manage Requests
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Tour Requests Management (Only for tour creator) */}
+            {showManageRequests && tourStatus?.isCreator && (
+                <div className="mb-4">
+                    <TourRequestsManager tourId={id} showAlert={showAlert} />
                 </div>
             )}
 
@@ -239,24 +268,6 @@ const Postcard = ({ showAlert }) => {
                             <div className="row mb-3">
                                 <div className="col-md-6 mb-2">
                                     <div className="d-flex align-items-center">
-                                        <FontAwesomeIcon icon={faMapMarkerAlt} className="text-primary me-2" />
-                                        <div>
-                                            <strong>Destination</strong>
-                                            <div className="text-muted">{post.destination}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-md-6 mb-2">
-                                    <div className="d-flex align-items-center">
-                                        <FontAwesomeIcon icon={faUsers} className="text-info me-2" />
-                                        <div>
-                                            <strong>Travel Type</strong>
-                                            <div className="text-muted">{post.travelType}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-md-6 mb-2">
-                                    <div className="d-flex align-items-center">
                                         <FontAwesomeIcon icon={faDollarSign} className="text-success me-2" />
                                         <div>
                                             <strong>Budget</strong>
@@ -293,10 +304,11 @@ const Postcard = ({ showAlert }) => {
 
                             {/* Action Buttons */}
                             <div className="d-flex gap-2">
-                                <button className="btn btn-success btn-lg">
-                                    <FontAwesomeIcon icon={faUsers} className="me-2" />
-                                    Request to Join
-                                </button>
+                                <JoinRequestButton 
+                                    tourId={id} 
+                                    showAlert={showAlert}
+                                    className="btn-lg"
+                                />
                                 <button className="btn btn-outline-primary">
                                     <FontAwesomeIcon icon={faStar} className="me-2" />
                                     Add to Wishlist
@@ -347,6 +359,35 @@ const Postcard = ({ showAlert }) => {
                             <div className="text-success fw-bold">${post.budget}</div>
                         </div>
                     </div>
+                    
+                    {/* Tour Capacity Information */}
+                    {tourStatus && (
+                        <div className="row mt-3 pt-3 border-top">
+                            <div className="col-md-6 mb-2">
+                                <strong>Tour Capacity</strong>
+                                <div className="text-muted">
+                                    {tourStatus.totalMates || 0} / {post.maxTourMates || 10} members
+                                </div>
+                                <div className="progress mt-1" style={{ height: '6px' }}>
+                                    <div 
+                                        className="progress-bar bg-success" 
+                                        role="progressbar" 
+                                        style={{ 
+                                            width: `${((tourStatus.totalMates || 0) / (post.maxTourMates || 10)) * 100}%` 
+                                        }}
+                                    ></div>
+                                </div>
+                            </div>
+                            <div className="col-md-6 mb-2">
+                                <strong>Available Spots</strong>
+                                <div className={`fw-bold ${
+                                    (tourStatus.availableSpots || 0) > 0 ? 'text-success' : 'text-danger'
+                                }`}>
+                                    {tourStatus.availableSpots || 0} spots remaining
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

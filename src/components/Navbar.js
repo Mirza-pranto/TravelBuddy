@@ -1,7 +1,10 @@
+// src/components/Navbar.js - Integrated with existing auth system
 import React, { useContext } from 'react';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import UserContext from "../context/userContext";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClipboardList } from '@fortawesome/free-solid-svg-icons';
 
 const Navbar = () => {
   const location = useLocation();
@@ -53,6 +56,12 @@ const Navbar = () => {
                 <li className="nav-item">
                   <Link className={`nav-link ${location.pathname === "/createpost" ? "active" : ""}`} to="/createpost">
                     Create Post
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className={`nav-link ${location.pathname === "/my-requests" ? "active" : ""}`} to="/my-requests">
+                    <FontAwesomeIcon icon={faClipboardList} className="me-2" />
+                    My Requests
                   </Link>
                 </li>
                 <li className="nav-item">
@@ -108,6 +117,12 @@ const Navbar = () => {
                     <Link className="dropdown-item" to="/createpost">
                       <i className="fas fa-plus me-2"></i>
                       Create Post
+                    </Link>
+                  </li>
+                  <li>
+                    <Link className="dropdown-item" to="/my-requests">
+                      <FontAwesomeIcon icon={faClipboardList} className="me-2" />
+                      My Requests
                     </Link>
                   </li>
                   <li><hr className="dropdown-divider" /></li>
