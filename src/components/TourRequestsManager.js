@@ -54,7 +54,7 @@ const TourRequestsManager = ({ tourId, showAlert }) => {
     const getProfilePicUrl = (profilePic) => {
         if (!profilePic) return "https://via.placeholder.com/50?text=User";
         if (profilePic.startsWith('http')) return profilePic;
-        return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${profilePic}`;
+        return `http://localhost:5000${profilePic}`; // Match your existing host configuration
     };
 
     const renderStars = (rating) => {

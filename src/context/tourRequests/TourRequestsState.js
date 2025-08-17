@@ -1,9 +1,9 @@
-// src/context/tourRequests/TourRequestsState.js
+// src/context/tourRequests/TourRequestsState.js - Updated to match your project structure
 import React, { useState } from 'react';
 import tourRequestsContext from './tourRequestsContext';
 
 const TourRequestsState = (props) => {
-    const host = process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const host = "http://localhost:5000"; // Match your existing host configuration
     const [requestStatus, setRequestStatus] = useState({});
     const [joinRequests, setJoinRequests] = useState([]);
     const [tourMates, setTourMates] = useState([]);

@@ -1,4 +1,3 @@
-// src/components/JoinRequestButton.js
 import React, { useContext, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 

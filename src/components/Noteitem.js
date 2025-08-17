@@ -32,13 +32,13 @@ const Noteitem = (props) => {
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
         if (imagePath.startsWith('http')) return imagePath;
-        return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${imagePath}`;
+        return `http://localhost:5000${imagePath}`; // Match your existing host configuration
     };
 
     const getProfilePicUrl = (profilePic) => {
         if (!profilePic) return "https://via.placeholder.com/40?text=User";
         if (profilePic.startsWith('http')) return profilePic;
-        return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${profilePic}`;
+        return `http://localhost:5000${profilePic}`; // Match your existing host configuration
     };
 
     const renderStars = (rating) => {

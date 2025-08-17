@@ -1,6 +1,6 @@
-// src/components/MyRequests.js
+// src/components/MyRequests.js - Updated to match your project structure
 import React, { useContext, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
     faSpinner, 
@@ -13,16 +13,24 @@ import {
     faEye
 } from '@fortawesome/free-solid-svg-icons';
 import tourRequestsContext from '../context/tourRequests/tourRequestsContext';
+import { useAuth } from '../context/authContext';
 
 const MyRequests = ({ showAlert }) => {
     const context = useContext(tourRequestsContext);
     const { getMyRequests } = context;
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
     
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, pending, accepted, rejected
 
     useEffect(() => {
+        if (!currentUser) {
+            navigate('/login');
+            return;
+        }
+
         const fetchMyRequests = async () => {
             setLoading(true);
             try {
@@ -40,12 +48,12 @@ const MyRequests = ({ showAlert }) => {
         };
 
         fetchMyRequests();
-    }, []);
+    }, [currentUser]);
 
     const getProfilePicUrl = (profilePic) => {
         if (!profilePic) return "https://via.placeholder.com/40?text=User";
         if (profilePic.startsWith('http')) return profilePic;
-        return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${profilePic}`;
+        return `http://localhost:5000${profilePic}`; // Match your existing host configuration
     };
 
     const getStatusBadge = (status) => {
