@@ -1,4 +1,4 @@
-// src/components/Navbar.js - Integrated with existing auth system
+// Navbar.js
 import React, { useContext } from 'react';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
@@ -14,15 +14,14 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    clearUser(); // Clear user data from UserContext
+    clearUser();
     navigate("/login");
   };
 
-  // Use user data from UserContext if available, fallback to AuthContext
   const userData = user || currentUser;
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-success">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-success sticky-top"> {/* Added sticky-top class */}
       <div className="container-fluid">
         <Link className="navbar-brand fw-bold" to="/">
           🌍 TravelBuddy
@@ -65,7 +64,7 @@ const Navbar = () => {
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className={`nav-link ${location.pathname === "/dashboard" ? "active" : ""}`} to="/dashboard">
+                  <Link className={`nav-link ${location.pathname.startsWith("/dashboard") ? "active" : ""}`} to="/dashboard">
                     Profile
                   </Link>
                 </li>
@@ -84,7 +83,6 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="d-flex align-items-center">
-              {/* User Profile Section */}
               <div className="dropdown">
                 <button
                   className="btn btn-link text-light text-decoration-none dropdown-toggle d-flex align-items-center"
@@ -135,7 +133,6 @@ const Navbar = () => {
                 </ul>
               </div>
               
-              {/* Simple logout button for mobile/fallback */}
               <button 
                 className="btn btn-outline-light ms-2 d-md-none" 
                 onClick={handleLogout}
