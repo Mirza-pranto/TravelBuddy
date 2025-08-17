@@ -22,6 +22,7 @@ import CreatePost from './components/CreatePost';
 import Postcard from './components/Postcard';
 import MyRequests from './components/MyRequests';
 import Dashboard from './components/Dashboard';
+import Footer from './components/Footer';
 
 function App() {
   const [alert, setAlert] = useState(null);
@@ -58,6 +59,8 @@ function App() {
                       <Route exact path="/dashboard" element={<Dashboard showAlert={showAlert} />} />
                     </Routes>
                   </div>
+                  <Footer />
+
                 </div>
               </Router>
             </CommentState>

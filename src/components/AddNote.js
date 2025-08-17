@@ -297,7 +297,7 @@ const AddNote = (props) => {
                                 Uploading...
                             </>
                         ) : (
-                            'Add Note'
+                            'Post Tour'
                         )}
                     </button>
                 </form>

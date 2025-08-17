@@ -56,3 +56,91 @@
     padding-top: 60px;
   }
 }
+
+/* Add to your CSS file */
+.create-post-card {
+  border-radius: 15px;
+  overflow: hidden;
+  border: none;
+}
+
+.create-post-card .card-header {
+  border-radius: 15px 15px 0 0 !important;
+}
+
+.note-editor {
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+}
+
+.note-editor:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.create-post-footer {
+  border-radius: 0 0 15px 15px;
+}
+footer {
+  background-color: #343a40;
+}
+
+footer a:hover {
+  color: #28a745 !important;
+  text-decoration: underline !important;
+}
+
+.social-icons a {
+  transition: all 0.3s ease;
+}
+
+.social-icons a:hover {
+  transform: translateY(-3px);
+  color: #28a745 !important;
+}
+
+.border-secondary {
+  border-color: #495057 !important;
+}
+
+/* About Page Styles */
+.hero-section {
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+              url('https://images.unsplash.com/photo-1508672019048-805c876b67e2');
+  background-size: cover;
+  background-position: center;
+  border-radius: 0 0 20px 20px;
+}
+
+.about-page {
+  overflow-x: hidden;
+}
+
+.icon-wrapper {
+  transition: all 0.3s ease;
+}
+
+.card:hover .icon-wrapper {
+  transform: scale(1.1);
+  background-color: rgba(40, 167, 69, 0.2) !important;
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    text-align: center;
+    padding: 3rem 0;
+  }
+  
+  .hero-section .btn {
+    margin: 0 auto;
+  }
+}
