@@ -13,7 +13,11 @@ router.get('/fetchallcomment/:noteId', fetchuser, async (req, res) => {
             return res.status(400).json({ error: "Note ID is required in URL." });
         }
 
-        const comments = await Comments.find({ note: noteId }).sort({ createdAt: -1 });
+        // Populate user information including name and profilePic
+        const comments = await Comments.find({ note: noteId })
+            .populate('user', 'name profilePic averageRating totalRatings bio')
+            .sort({ createdAt: -1 });
+        
         res.json(comments);
     } catch (error) {
         console.error("Error fetching comments:", error.message);
@@ -59,9 +63,14 @@ router.post('/addcomment/:noteId', fetchuser, [
         console.log('Comment object created:', comment);
 
         const savedComment = await comment.save();
-        console.log('Comment saved successfully:', savedComment);
         
-        res.json(savedComment);
+        // Populate user information before sending response
+        const populatedComment = await Comments.findById(savedComment._id)
+            .populate('user', 'name profilePic averageRating totalRatings bio');
+        
+        console.log('Comment saved successfully:', populatedComment);
+        
+        res.json(populatedComment);
     } catch (error) {
         console.error("=== ERROR in addcomment route ===");
         console.error("Error message:", error.message);
@@ -116,7 +125,7 @@ router.put('/updatecomment/:id', fetchuser, [
             req.params.id,
             { text },
             { new: true }
-        );
+        ).populate('user', 'name profilePic averageRating totalRatings bio');
         
         res.json(updatedComment);
     } catch (error) {

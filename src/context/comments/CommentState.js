@@ -15,6 +15,13 @@ const CommentState = (props) => {
                     'auth-token': localStorage.getItem('token')
                 }
             });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Server error:", response.status, errorText);
+                return [];
+            }
+            
             const json = await response.json();
             setComments(json);
             return json;
@@ -36,15 +43,16 @@ const CommentState = (props) => {
                 body: JSON.stringify({ text })
             });
             
-            if (response.ok) {
-                const comment = await response.json();
-                setComments(comments.concat(comment));
-                return comment;
-            } else {
-                const errorData = await response.json();
-                console.error("Error adding comment:", errorData);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Server error:", response.status, errorText);
                 return null;
             }
+            
+            const comment = await response.json();
+            // Add the new comment to the beginning of the array (newest first)
+            setComments(prevComments => [comment, ...prevComments]);
+            return comment;
         } catch (error) {
             console.error("Error adding comment:", error);
             return null;
@@ -66,8 +74,11 @@ const CommentState = (props) => {
                 const newComments = comments.filter((comment) => comment._id !== id);
                 setComments(newComments);
                 return true;
+            } else {
+                const errorData = await response.json();
+                console.error("Error deleting comment:", errorData);
+                return false;
             }
-            return false;
         } catch (error) {
             console.error("Error deleting comment:", error);
             return false;
@@ -87,21 +98,32 @@ const CommentState = (props) => {
             });
 
             if (response.ok) {
+                const updatedComment = await response.json();
+                
+                // Update the comment in the state with the populated user data
                 let newComments = JSON.parse(JSON.stringify(comments));
                 for (let index = 0; index < newComments.length; index++) {
                     if (newComments[index]._id === id) {
-                        newComments[index].text = text;
+                        newComments[index] = updatedComment; // Replace with updated comment
                         break;
                     }
                 }
                 setComments(newComments);
                 return true;
+            } else {
+                const errorData = await response.json();
+                console.error("Error updating comment:", errorData);
+                return false;
             }
-            return false;
         } catch (error) {
             console.error("Error editing comment:", error);
             return false;
         }
+    };
+
+    // Clear comments (useful when switching between different notes)
+    const clearComments = () => {
+        setComments([]);
     };
 
     return (
@@ -110,7 +132,8 @@ const CommentState = (props) => {
             addComment,
             deleteComment,
             editComment,
-            getComments
+            getComments,
+            clearComments
         }}>
             {props.children}
         </commentContext.Provider>
