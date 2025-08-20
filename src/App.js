@@ -23,6 +23,7 @@ import Postcard from './components/Postcard';
 import MyRequests from './components/MyRequests';
 import Dashboard from './components/Dashboard';
 import Footer from './components/Footer';
+import UserProfile from './components/UserProfile';
 
 function App() {
   const [alert, setAlert] = useState(null);
@@ -55,6 +56,7 @@ function App() {
                       <Route exact path="/signup" element={<Signup showAlert={showAlert} />} />
                       <Route exact path="/createpost" element={<CreatePost showAlert={showAlert} />} />
                       <Route exact path="/post/:id" element={<Postcard showAlert={showAlert} />} />
+                      <Route exact path="/profile/:userId" element={<UserProfile showAlert={showAlert} />} />
                       <Route exact path="/my-requests" element={<MyRequests showAlert={showAlert} />} />
                       <Route exact path="/dashboard" element={<Dashboard showAlert={showAlert} />} />
                     </Routes>

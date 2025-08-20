@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPenToSquare, faStar } from '@fortawesome/free-solid-svg-icons';
 import commentContext from '../context/comments/commentContext';
@@ -9,6 +10,14 @@ const CommentItem = ({ comment, updateComment, showAlert, editable = true }) => 
     const userContext = useContext(UserContext);
     const { deleteComment } = context;
     const { user: currentUser } = userContext; // Get current logged-in user
+    const navigate = useNavigate(); // Add navigation hook
+
+    // Handle profile click navigation
+    const handleProfileClick = () => {
+        if (comment.user && comment.user._id) {
+            navigate(`/profile/${comment.user._id}`);
+        }
+    };
 
     const handleActionClick = async (e, action) => {
         e.preventDefault();
@@ -91,7 +100,7 @@ const CommentItem = ({ comment, updateComment, showAlert, editable = true }) => 
             <div className="card-body p-3">
                 {/* Commenter Info */}
                 <div className="d-flex align-items-start">
-                    <div className="clickable-profile me-3" style={{ cursor: 'pointer' }}>
+                    <div className="clickable-profile me-3" style={{ cursor: 'pointer' }} onClick={handleProfileClick}>
                         <img 
                             src={getProfilePicUrl(commentUser.profilePic)} 
                             alt={commentUser.name}
@@ -120,6 +129,7 @@ const CommentItem = ({ comment, updateComment, showAlert, editable = true }) => 
                                     className="mb-0 me-2 fw-bold clickable-profile text-primary" 
                                     style={{ cursor: 'pointer' }}
                                     title="Click to view profile"
+                                    onClick={handleProfileClick}
                                 >
                                     {commentUser.name}
                                 </h6>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faTrash, 
@@ -17,6 +17,16 @@ const Noteitem = (props) => {
     const context = React.useContext(noteContext);
     const { deleteNote } = context;
     const { note, updateNote, showAlert, editable = true } = props;
+    const navigate = useNavigate(); // Add navigation hook
+
+    // Handle profile click navigation
+    const handleProfileClick = (e) => {
+        e.preventDefault(); // Prevent the Link navigation
+        e.stopPropagation();
+        if (note.user && note.user._id) {
+            navigate(`/profile/${note.user._id}`);
+        }
+    };
 
     const handleActionClick = (e, action) => {
         e.preventDefault();
@@ -115,14 +125,36 @@ const Noteitem = (props) => {
                                 src={getProfilePicUrl(note.user.profilePic)} 
                                 alt={note.user.name}
                                 className="rounded-circle me-2"
-                                style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                                style={{ 
+                                    width: '40px', 
+                                    height: '40px', 
+                                    objectFit: 'cover', 
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.2s ease'
+                                }}
+                                onClick={handleProfileClick}
+                                title="Click to view profile"
                                 onError={(e) => {
                                     e.target.onerror = null;
                                     e.target.src = "https://via.placeholder.com/40?text=User";
                                 }}
+                                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
                             />
                             <div className="flex-grow-1">
-                                <h6 className="mb-0 fw-bold">{note.user.name}</h6>
+                                <h6 
+                                    className="mb-0 fw-bold text-primary" 
+                                    style={{ 
+                                        cursor: 'pointer',
+                                        transition: 'color 0.2s ease'
+                                    }}
+                                    onClick={handleProfileClick}
+                                    title="Click to view profile"
+                                    onMouseOver={(e) => e.target.style.color = '#0056b3'}
+                                    onMouseOut={(e) => e.target.style.color = '#0d6efd'}
+                                >
+                                    {note.user.name}
+                                </h6>
                                 {note.user.averageRating > 0 && (
                                     <div className="d-flex align-items-center">
                                         <div className="me-1">
@@ -141,12 +173,22 @@ const Noteitem = (props) => {
                                         className="text-success me-2 cursor-pointer"
                                         onClick={(e) => handleActionClick(e, 'edit')}
                                         title="Edit note"
+                                        style={{ 
+                                            transition: 'color 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => e.target.style.color = '#198754'}
+                                        onMouseOut={(e) => e.target.style.color = '#28a745'}
                                     />
                                     <FontAwesomeIcon
                                         icon={faTrash}
                                         className="text-danger cursor-pointer"
                                         onClick={(e) => handleActionClick(e, 'delete')}
                                         title="Delete note"
+                                        style={{ 
+                                            transition: 'color 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => e.target.style.color = '#dc3545'}
+                                        onMouseOut={(e) => e.target.style.color = '#e74c3c'}
                                     />
                                 </div>
                             )}

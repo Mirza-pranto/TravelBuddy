@@ -177,6 +177,32 @@ router.put('/updateuser', fetchuser, [
     }
 });
 
+// Add these routes to your auth.js file
+
+// Route 5: Get user profile by ID (public access): GET "/api/auth/getuser/:userId"
+router.get('/getuser/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        
+        // Validate ObjectId format
+        const mongoose = require('mongoose');
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: "Invalid user ID format" });
+        }
+
+        const user = await User.findById(userId).select("-password -nidNumber");
+        
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.json(user);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 
 
 

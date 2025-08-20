@@ -143,6 +143,29 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// ===== Add this route to your notes.js file =====
+
+// Route 7: Get all notes by a specific user: GET "/api/notes/user/:userId" . Public access
+router.get('/user/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        
+        // Validate ObjectId format
+        const mongoose = require('mongoose');
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: "Invalid user ID format" });
+        }
+
+        const notes = await Notes.find({ user: userId })
+            .sort({ createdAt: -1 }) // newest first
+            .populate('user', 'name profilePic averageRating totalRatings bio');
+        
+        res.json(notes);
+    } catch (error) {
+        console.error("Error fetching user notes:", error.message);
+        res.status(500).send("Internal Server Error");
+    }
+});
 
 
 
