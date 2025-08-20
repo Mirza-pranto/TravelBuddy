@@ -147,3 +147,6 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Internal Server Error' });
 });
+
+// Add this line with your other route imports
+app.use('/api/ratings', require('./routes/rating'));

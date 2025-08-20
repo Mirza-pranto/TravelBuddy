@@ -13,6 +13,7 @@ import {
     faUserCircle,
     faIdCard
 } from '@fortawesome/free-solid-svg-icons';
+import RatingDisplay from './RatingDisplay';
 
 const UserProfile = ({ showAlert }) => {
     const { userId } = useParams();
@@ -241,6 +242,15 @@ const UserProfile = ({ showAlert }) => {
                                         Tours ({userNotes.length})
                                     </button>
                                 </li>
+                                <li className="nav-item">
+                                    <button 
+                                        className={`nav-link ${activeTab === 'ratings' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('ratings')}
+                                    >
+                                        <FontAwesomeIcon icon={faStar} className="me-1" />
+                                        Reviews ({userProfile.totalRatings || 0})
+                                    </button>
+                                </li>
                             </ul>
                         </div>
                         
@@ -303,7 +313,7 @@ const UserProfile = ({ showAlert }) => {
                                         </div>
                                     )}
                                 </div>
-                            ) : (
+                            ) : activeTab === 'tours' ? (
                                 <div>
                                     <h5 className="mb-4">Tours by {userProfile.name}</h5>
                                     
@@ -385,6 +395,15 @@ const UserProfile = ({ showAlert }) => {
                                             ))}
                                         </div>
                                     )}
+                                </div>
+                            ) : (
+                                // Ratings Tab
+                                <div>
+                                    <h5 className="mb-4">Reviews for {userProfile.name}</h5>
+                                    <RatingDisplay 
+                                        userId={userId} 
+                                        showAlert={showAlert}
+                                    />
                                 </div>
                             )}
                         </div>
