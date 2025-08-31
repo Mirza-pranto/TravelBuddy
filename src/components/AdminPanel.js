@@ -1,11 +1,10 @@
-// src/components/AdminPanel.js
+// src/components/AdminPanel.js - Updated without dashboard
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faUsers,
     faFileAlt,
     faTrash,
-    faChartBar,
     faSpinner,
     faSearch,
     faEye,
@@ -15,10 +14,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 const AdminPanel = ({ showAlert }) => {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState('users');
     const [users, setUsers] = useState([]);
     const [posts, setPosts] = useState([]);
-    const [stats, setStats] = useState({});
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState({
@@ -33,45 +31,13 @@ const AdminPanel = ({ showAlert }) => {
     const itemsPerPage = 10;
 
     useEffect(() => {
-        if (activeTab === 'dashboard') {
-            fetchDashboardStats();
-        } else if (activeTab === 'users') {
+        if (activeTab === 'users') {
             fetchUsers();
         } else if (activeTab === 'posts') {
             fetchPosts();
         }
     }, [activeTab, currentPage]);
 
-    const fetchDashboardStats = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch('http://localhost:5000/api/admin/dashboard-stats', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'auth-token': localStorage.getItem('token')
-                }
-            });
-
-            // Check if response is OK
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                setStats(data.stats);
-            } else {
-                showAlert(data.error || 'Failed to fetch dashboard stats', 'error');
-            }
-        } catch (error) {
-            console.error('Error fetching dashboard stats:', error);
-            showAlert('Error fetching dashboard stats. Please check if the server is running.', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
     const fetchUsers = async () => {
         try {
             setLoading(true);
@@ -86,7 +52,6 @@ const AdminPanel = ({ showAlert }) => {
                 }
             );
 
-            // Check if response is OK
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -121,7 +86,6 @@ const AdminPanel = ({ showAlert }) => {
                 }
             );
 
-            // Check if response is OK
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -142,7 +106,6 @@ const AdminPanel = ({ showAlert }) => {
         }
     };
 
-
     const deleteUser = async (userId, userName) => {
         if (!window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
             return;
@@ -161,10 +124,7 @@ const AdminPanel = ({ showAlert }) => {
 
             if (data.success) {
                 showAlert(data.message, 'success');
-                fetchUsers(); // Refresh the user list
-                if (activeTab === 'dashboard') {
-                    fetchDashboardStats(); // Refresh stats
-                }
+                fetchUsers();
             } else {
                 showAlert(data.error || 'Failed to delete user', 'error');
             }
@@ -192,10 +152,7 @@ const AdminPanel = ({ showAlert }) => {
 
             if (data.success) {
                 showAlert(data.message, 'success');
-                fetchPosts(); // Refresh the post list
-                if (activeTab === 'dashboard') {
-                    fetchDashboardStats(); // Refresh stats
-                }
+                fetchPosts();
             } else {
                 showAlert(data.error || 'Failed to delete post', 'error');
             }
@@ -224,7 +181,7 @@ const AdminPanel = ({ showAlert }) => {
 
             if (data.success) {
                 showAlert(data.message, 'success');
-                fetchUsers(); // Refresh the user list
+                fetchUsers();
             } else {
                 showAlert(data.error || `Failed to ${action}`, 'error');
             }
@@ -316,15 +273,6 @@ const AdminPanel = ({ showAlert }) => {
                             <ul className="nav nav-tabs mb-4">
                                 <li className="nav-item">
                                     <button
-                                        className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('dashboard')}
-                                    >
-                                        <FontAwesomeIcon icon={faChartBar} className="me-2" />
-                                        Dashboard
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button
                                         className={`nav-link ${activeTab === 'users' ? 'active' : ''}`}
                                         onClick={() => setActiveTab('users')}
                                     >
@@ -372,118 +320,6 @@ const AdminPanel = ({ showAlert }) => {
                                             </div>
                                         </form>
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Dashboard Tab */}
-                            {activeTab === 'dashboard' && (
-                                <div>
-                                    {loading ? (
-                                        <div className="text-center py-5">
-                                            <FontAwesomeIcon icon={faSpinner} spin size="3x" className="text-primary mb-3" />
-                                            <p>Loading dashboard statistics...</p>
-                                        </div>
-                                    ) : (
-                                        <div className="row">
-                                            {/* Stats Cards */}
-                                            <div className="col-md-3 mb-4">
-                                                <div className="card bg-primary text-white text-center">
-                                                    <div className="card-body">
-                                                        <h2 className="card-title">{stats.totalUsers || 0}</h2>
-                                                        <p className="card-text">Total Users</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-3 mb-4">
-                                                <div className="card bg-success text-white text-center">
-                                                    <div className="card-body">
-                                                        <h2 className="card-title">{stats.totalPosts || 0}</h2>
-                                                        <p className="card-text">Total Posts</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-3 mb-4">
-                                                <div className="card bg-info text-white text-center">
-                                                    <div className="card-body">
-                                                        <h2 className="card-title">{stats.totalAdmins || 0}</h2>
-                                                        <p className="card-text">Admins</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-3 mb-4">
-                                                <div className="card bg-warning text-white text-center">
-                                                    <div className="card-body">
-                                                        <h2 className="card-title">{stats.recentUsers || 0}</h2>
-                                                        <p className="card-text">New Users (7 days)</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Travel Type Distribution */}
-                                            {stats.postsByTravelType && stats.postsByTravelType.length > 0 && (
-                                                <div className="col-12 mb-4">
-                                                    <div className="card">
-                                                        <div className="card-header">
-                                                            <h5 className="mb-0">Posts by Travel Type</h5>
-                                                        </div>
-                                                        <div className="card-body">
-                                                            <div className="row">
-                                                                {stats.postsByTravelType.map((type) => (
-                                                                    <div key={type._id} className="col-md-3 mb-2">
-                                                                        <div className="d-flex justify-content-between align-items-center p-2 border rounded">
-                                                                            <span className="text-capitalize">{type._id || 'Other'}</span>
-                                                                            <span className="badge bg-primary">{type.count}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Quick Actions */}
-                                            <div className="col-12">
-                                                <div className="card">
-                                                    <div className="card-header">
-                                                        <h5 className="mb-0">Quick Actions</h5>
-                                                    </div>
-                                                    <div className="card-body">
-                                                        <div className="row">
-                                                            <div className="col-md-4 mb-2">
-                                                                <button
-                                                                    className="btn btn-outline-primary w-100"
-                                                                    onClick={() => setActiveTab('users')}
-                                                                >
-                                                                    <FontAwesomeIcon icon={faUsers} className="me-2" />
-                                                                    Manage Users
-                                                                </button>
-                                                            </div>
-                                                            <div className="col-md-4 mb-2">
-                                                                <button
-                                                                    className="btn btn-outline-success w-100"
-                                                                    onClick={() => setActiveTab('posts')}
-                                                                >
-                                                                    <FontAwesomeIcon icon={faFileAlt} className="me-2" />
-                                                                    Manage Posts
-                                                                </button>
-                                                            </div>
-                                                            <div className="col-md-4 mb-2">
-                                                                <button
-                                                                    className="btn btn-outline-info w-100"
-                                                                    onClick={() => setActiveTab('reports')}
-                                                                    disabled
-                                                                >
-                                                                    <FontAwesomeIcon icon={faEye} className="me-2" />
-                                                                    View Reports
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             )}
 

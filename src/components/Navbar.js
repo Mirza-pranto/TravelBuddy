@@ -1,4 +1,4 @@
-// src/components/Navbar.js - Updated with Admin Dashboard link
+// src/components/Navbar.js
 import React, { useContext } from 'react';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
@@ -6,8 +6,7 @@ import UserContext from "../context/userContext";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faClipboardList, 
-  faUserShield, 
-  faChartLine 
+  faUserShield
 } from '@fortawesome/free-solid-svg-icons';
 
 const Navbar = () => {

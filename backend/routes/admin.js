@@ -1,4 +1,4 @@
-// routes/admin.js - Updated with all required endpoints
+// routes/admin.js - Updated without dashboard
 const express = require('express');
 const router = express.Router();
 const Notes = require('../models/Notes');
@@ -26,51 +26,7 @@ const checkAdmin = async (req, res, next) => {
     }
 };
 
-// Route 1: Get admin dashboard statistics
-router.get('/dashboard-stats', fetchuser, checkAdmin, async (req, res) => {
-    try {
-        const totalUsers = await User.countDocuments();
-        const totalPosts = await Notes.countDocuments();
-        const totalAdmins = await User.countDocuments({ isAdmin: true });
-        
-        // Recent activity (last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
-        const recentUsers = await User.countDocuments({ 
-            date: { $gte: sevenDaysAgo } 
-        });
-        const recentPosts = await Notes.countDocuments({ 
-            createdAt: { $gte: sevenDaysAgo } 
-        });
-
-        // Posts by travel type
-        const postsByTravelType = await Notes.aggregate([
-            { $group: { _id: "$travelType", count: { $sum: 1 } } },
-            { $sort: { count: -1 } }
-        ]);
-
-        res.json({
-            success: true,
-            stats: {
-                totalUsers,
-                totalPosts,
-                totalAdmins,
-                recentUsers,
-                recentPosts,
-                postsByTravelType
-            }
-        });
-    } catch (error) {
-        console.error("Error fetching admin stats:", error);
-        res.status(500).json({ 
-            success: false, 
-            error: "Internal Server Error" 
-        });
-    }
-});
-
-// Route 2: Get all users with pagination and search
+// Route 1: Get all users with pagination and search
 router.get('/users', fetchuser, checkAdmin, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -134,7 +90,7 @@ router.get('/users', fetchuser, checkAdmin, async (req, res) => {
     }
 });
 
-// Route 3: Get all posts with pagination and search
+// Route 2: Get all posts with pagination and search
 router.get('/posts', fetchuser, checkAdmin, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -186,7 +142,7 @@ router.get('/posts', fetchuser, checkAdmin, async (req, res) => {
     }
 });
 
-// Route 4: Delete a user account
+// Route 3: Delete a user account
 router.delete('/users/:userId', fetchuser, checkAdmin, async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -244,7 +200,7 @@ router.delete('/users/:userId', fetchuser, checkAdmin, async (req, res) => {
     }
 });
 
-// Route 5: Delete a post
+// Route 4: Delete a post
 router.delete('/posts/:postId', fetchuser, checkAdmin, async (req, res) => {
     try {
         const postId = req.params.postId;
@@ -280,7 +236,7 @@ router.delete('/posts/:postId', fetchuser, checkAdmin, async (req, res) => {
     }
 });
 
-// Route 6: Get user details by ID
+// Route 5: Get user details by ID
 router.get('/users/:userId', fetchuser, checkAdmin, async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -319,7 +275,7 @@ router.get('/users/:userId', fetchuser, checkAdmin, async (req, res) => {
     }
 });
 
-// Route 7: Toggle user admin status
+// Route 6: Toggle user admin status
 router.put('/users/:userId/toggle-admin', fetchuser, checkAdmin, async (req, res) => {
     try {
         const userId = req.params.userId;
