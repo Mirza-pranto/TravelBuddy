@@ -25,6 +25,7 @@ import Dashboard from './components/Dashboard';
 import Footer from './components/Footer';
 import UserProfile from './components/UserProfile';
 import AdminPanel from './components/AdminPanel'; // Import the new AdminPanel
+import MyReports from './components/MyReports';
 
 function App() {
   const [alert, setAlert] = useState(null);
@@ -60,7 +61,8 @@ function App() {
                       <Route exact path="/profile/:userId" element={<UserProfile showAlert={showAlert} />} />
                       <Route exact path="/my-requests" element={<MyRequests showAlert={showAlert} />} />
                       <Route exact path="/dashboard" element={<Dashboard showAlert={showAlert} />} />
-                      <Route exact path="/admin" element={<AdminPanel showAlert={showAlert} />} /> {/* Add AdminPanel route */}
+                      <Route exact path="/admin" element={<AdminPanel showAlert={showAlert} />} />
+                      <Route exact path="/my-reports" element={<MyReports showAlert={showAlert} />} />
                     </Routes>
                   </div>
                   <Footer />

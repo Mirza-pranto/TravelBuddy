@@ -1,4 +1,3 @@
-// src/components/AdminPanel.js - Updated without dashboard
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -10,22 +9,32 @@ import {
     faEye,
     faUserShield,
     faTimes,
-    faCheck
+    faCheck,
+    faFlag,
+    faChartBar,
+    faCheckCircle,
+    faTimesCircle,
+    faClock
 } from '@fortawesome/free-solid-svg-icons';
 
 const AdminPanel = ({ showAlert }) => {
     const [activeTab, setActiveTab] = useState('users');
     const [users, setUsers] = useState([]);
     const [posts, setPosts] = useState([]);
+    const [reports, setReports] = useState([]);
+    const [reportsStats, setReportsStats] = useState({});
+    const [reportStatusCounts, setReportStatusCounts] = useState({});
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState({
         users: 1,
-        posts: 1
+        posts: 1,
+        reports: 1
     });
     const [totalPages, setTotalPages] = useState({
         users: 1,
-        posts: 1
+        posts: 1,
+        reports: 1
     });
 
     const itemsPerPage = 10;
@@ -35,6 +44,9 @@ const AdminPanel = ({ showAlert }) => {
             fetchUsers();
         } else if (activeTab === 'posts') {
             fetchPosts();
+        } else if (activeTab === 'reports') {
+            fetchReports();
+            fetchReportsStats();
         }
     }, [activeTab, currentPage]);
 
@@ -103,6 +115,61 @@ const AdminPanel = ({ showAlert }) => {
             showAlert('Error fetching posts. Please check if the server is running.', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchReports = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(
+                `http://localhost:5000/api/admin/reports?page=${currentPage.reports || 1}&limit=${itemsPerPage}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'auth-token': localStorage.getItem('token')
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                setReports(data.reports);
+                setReportStatusCounts(data.statusCounts || {});
+                setTotalPages(prev => ({ ...prev, reports: data.pagination.totalPages }));
+            } else {
+                showAlert(data.error || 'Failed to fetch reports', 'error');
+            }
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+            showAlert('Error fetching reports. Please check if the server is running.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchReportsStats = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/api/admin/reports-stats', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token': localStorage.getItem('token')
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setReportsStats(data.stats);
+            }
+        } catch (error) {
+            console.error('Error fetching report statistics:', error);
         }
     };
 
@@ -191,6 +258,32 @@ const AdminPanel = ({ showAlert }) => {
         }
     };
 
+    const updateReportStatus = async (reportId, status, adminNotes = '') => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/admin/reports/${reportId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token': localStorage.getItem('token')
+                },
+                body: JSON.stringify({ status, adminNotes })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showAlert(data.message, 'success');
+                fetchReports(); // Refresh the reports list
+                fetchReportsStats(); // Refresh statistics
+            } else {
+                showAlert(data.error || 'Failed to update report', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating report:', error);
+            showAlert('Error updating report', 'error');
+        }
+    };
+
     const handleSearch = (e) => {
         e.preventDefault();
         if (activeTab === 'users') {
@@ -212,6 +305,24 @@ const AdminPanel = ({ showAlert }) => {
         if (!imagePath) return "https://via.placeholder.com/100?text=No+Image";
         if (imagePath.startsWith('http')) return imagePath;
         return `http://localhost:5000${imagePath}`;
+    };
+
+    const getStatusBadge = (status) => {
+        const statusConfig = {
+            pending: { class: 'bg-warning', icon: faClock },
+            reviewed: { class: 'bg-info', icon: faEye },
+            resolved: { class: 'bg-success', icon: faCheckCircle },
+            dismissed: { class: 'bg-secondary', icon: faTimesCircle }
+        };
+
+        const config = statusConfig[status] || statusConfig.pending;
+
+        return (
+            <span className={`badge ${config.class}`}>
+                <FontAwesomeIcon icon={config.icon} className="me-1" />
+                {status}
+            </span>
+        );
     };
 
     const renderPagination = (type) => {
@@ -293,10 +404,14 @@ const AdminPanel = ({ showAlert }) => {
                                     <button
                                         className={`nav-link ${activeTab === 'reports' ? 'active' : ''}`}
                                         onClick={() => setActiveTab('reports')}
-                                        disabled
                                     >
-                                        <FontAwesomeIcon icon={faEye} className="me-2" />
-                                        Reports (Coming Soon)
+                                        <FontAwesomeIcon icon={faFlag} className="me-2" />
+                                        Reports
+                                        {reportStatusCounts.pending > 0 && (
+                                            <span className="badge bg-danger ms-2">
+                                                {reportStatusCounts.pending}
+                                            </span>
+                                        )}
                                     </button>
                                 </li>
                             </ul>
@@ -519,14 +634,170 @@ const AdminPanel = ({ showAlert }) => {
                                 </div>
                             )}
 
-                            {/* Reports Tab (Placeholder) */}
+                            {/* Reports Tab */}
                             {activeTab === 'reports' && (
-                                <div className="text-center py-5">
-                                    <FontAwesomeIcon icon={faEye} size="3x" className="text-muted mb-3" />
-                                    <h4>Reports Feature Coming Soon</h4>
-                                    <p className="text-muted">
-                                        This section will display all user reports and moderation tools.
-                                    </p>
+                                <div>
+                                    {loading ? (
+                                        <div className="text-center py-5">
+                                            <FontAwesomeIcon icon={faSpinner} spin size="3x" className="text-primary mb-3" />
+                                            <p>Loading reports...</p>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            {/* Reports Statistics */}
+                                            <div className="row mb-4">
+                                                <div className="col-md-3 mb-3">
+                                                    <div className="card bg-primary text-white text-center">
+                                                        <div className="card-body">
+                                                            <h5 className="card-title">{reportsStats.totalReports || 0}</h5>
+                                                            <p className="card-text">Total Reports</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-3 mb-3">
+                                                    <div className="card bg-warning text-dark text-center">
+                                                        <div className="card-body">
+                                                            <h5 className="card-title">{reportStatusCounts.pending || 0}</h5>
+                                                            <p className="card-text">Pending</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-3 mb-3">
+                                                    <div className="card bg-success text-white text-center">
+                                                        <div className="card-body">
+                                                            <h5 className="card-title">{reportStatusCounts.resolved || 0}</h5>
+                                                            <p className="card-text">Resolved</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-3 mb-3">
+                                                    <div className="card bg-info text-white text-center">
+                                                        <div className="card-body">
+                                                            <h5 className="card-title">{reportStatusCounts.reviewed || 0}</h5>
+                                                            <p className="card-text">Reviewed</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Reports Table */}
+                                            <div className="table-responsive">
+                                                <table className="table table-striped table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Reported User</th>
+                                                            <th>Reporter</th>
+                                                            <th>Reason</th>
+                                                            <th>Status</th>
+                                                            <th>Date</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {reports.length === 0 ? (
+                                                            <tr>
+                                                                <td colSpan="6" className="text-center py-4">
+                                                                    No reports found.
+                                                                </td>
+                                                            </tr>
+                                                        ) : (
+                                                            reports.map((report) => (
+                                                                <tr key={report._id}>
+                                                                    <td>
+                                                                        <div className="d-flex align-items-center">
+                                                                            <img
+                                                                                src={getProfilePicUrl(report.reportedUser.profilePic)}
+                                                                                alt={report.reportedUser.name}
+                                                                                className="rounded-circle me-2"
+                                                                                style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                                                                                onError={(e) => {
+                                                                                    e.target.onerror = null;
+                                                                                    e.target.src = "https://via.placeholder.com/40?text=User";
+                                                                                }}
+                                                                            />
+                                                                            <div>
+                                                                                <div className="fw-bold">{report.reportedUser.name}</div>
+                                                                                <small className="text-muted">{report.reportedUser.email}</small>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div className="d-flex align-items-center">
+                                                                            <img
+                                                                                src={getProfilePicUrl(report.reporter.profilePic)}
+                                                                                alt={report.reporter.name}
+                                                                                className="rounded-circle me-2"
+                                                                                style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                                                                                onError={(e) => {
+                                                                                    e.target.onerror = null;
+                                                                                    e.target.src = "https://via.placeholder.com/40?text=User";
+                                                                                }}
+                                                                            />
+                                                                            <div>
+                                                                                <div className="fw-bold">{report.reporter.name}</div>
+                                                                                <small className="text-muted">{report.reporter.email}</small>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span className="badge bg-secondary">{report.reason}</span>
+                                                                        {report.description && (
+                                                                            <div className="mt-1">
+                                                                                <small className="text-muted" title={report.description}>
+                                                                                    {report.description.length > 50 
+                                                                                        ? `${report.description.substring(0, 50)}...` 
+                                                                                        : report.description
+                                                                                    }
+                                                                                </small>
+                                                                            </div>
+                                                                        )}
+                                                                    </td>
+                                                                    <td>
+                                                                        {getStatusBadge(report.status)}
+                                                                    </td>
+                                                                    <td>
+                                                                        <small>{new Date(report.createdAt).toLocaleDateString()}</small>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div className="btn-group">
+                                                                            <button
+                                                                                className="btn btn-sm btn-outline-primary"
+                                                                                onClick={() => {
+                                                                                    alert(`Report Details:\n\nReason: ${report.reason}\nDescription: ${report.description || 'None'}\nStatus: ${report.status}`);
+                                                                                }}
+                                                                                title="View Details"
+                                                                            >
+                                                                                <FontAwesomeIcon icon={faEye} />
+                                                                            </button>
+                                                                            {report.status === 'pending' && (
+                                                                                <>
+                                                                                    <button
+                                                                                        className="btn btn-sm btn-outline-success"
+                                                                                        onClick={() => updateReportStatus(report._id, 'resolved', 'Report resolved by admin')}
+                                                                                        title="Resolve Report"
+                                                                                    >
+                                                                                        <FontAwesomeIcon icon={faCheckCircle} />
+                                                                                    </button>
+                                                                                    <button
+                                                                                        className="btn btn-sm btn-outline-danger"
+                                                                                        onClick={() => updateReportStatus(report._id, 'dismissed', 'Report dismissed by admin')}
+                                                                                        title="Dismiss Report"
+                                                                                    >
+                                                                                        <FontAwesomeIcon icon={faTimesCircle} />
+                                                                                    </button>
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            {renderPagination('reports')}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

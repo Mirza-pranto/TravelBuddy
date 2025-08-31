@@ -138,6 +138,7 @@ app.use('/api/tour-requests', require('./routes/tourRequests'));
 app.use('/api/ratings', require('./routes/rating'));
 app.use('/api/admin', require('./routes/admin')); // Add this line for admin routes
 
+app.use('/api/reports', require('./routes/reports'));
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });

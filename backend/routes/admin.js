@@ -1,10 +1,12 @@
-// routes/admin.js - Updated without dashboard
+// routes/admin.js - Updated with Report model import
 const express = require('express');
 const router = express.Router();
 const Notes = require('../models/Notes');
 const User = require('../models/User');
+const Report = require('../models/Report'); // Added Report model import
 const fetchuser = require('../middleware/fetchuser');
 const mongoose = require('mongoose');
+const { body, validationResult } = require('express-validator');
 
 // Middleware to check if user is admin
 const checkAdmin = async (req, res, next) => {
@@ -321,6 +323,261 @@ router.put('/users/:userId/toggle-admin', fetchuser, checkAdmin, async (req, res
         res.status(500).json({ 
             success: false, 
             error: "Internal Server Error" 
+        });
+    }
+});
+
+// Route 7: Get all reports with pagination and filters
+router.get('/reports', fetchuser, checkAdmin, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const status = req.query.status || '';
+        const search = req.query.search || '';
+        const sortBy = req.query.sortBy || 'createdAt';
+        const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+
+        const skip = (page - 1) * limit;
+
+        // Build filter query
+        let filterQuery = {};
+        if (status) {
+            filterQuery.status = status;
+        }
+
+        // Build search query
+        let searchQuery = {};
+        if (search) {
+            searchQuery = {
+                $or: [
+                    { 'reporter.name': { $regex: search, $options: 'i' } },
+                    { 'reporter.email': { $regex: search, $options: 'i' } },
+                    { 'reportedUser.name': { $regex: search, $options: 'i' } },
+                    { 'reportedUser.email': { $regex: search, $options: 'i' } },
+                    { reason: { $regex: search, $options: 'i' } }
+                ]
+            };
+        }
+
+        const finalQuery = { ...filterQuery, ...searchQuery };
+
+        const reports = await Report.find(finalQuery)
+            .populate('reporter', 'name email profilePic')
+            .populate('reportedUser', 'name email profilePic')
+            .populate('resolvedBy', 'name')
+            .sort({ [sortBy]: sortOrder })
+            .skip(skip)
+            .limit(limit);
+
+        const totalReports = await Report.countDocuments(finalQuery);
+        const totalPages = Math.ceil(totalReports / limit);
+
+        // Get counts for each status
+        const statusCounts = await Report.aggregate([
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const statusCountsObj = statusCounts.reduce((acc, item) => {
+            acc[item._id] = item.count;
+            return acc;
+        }, {});
+
+        res.json({
+            success: true,
+            reports,
+            statusCounts: statusCountsObj,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalReports,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching reports:", error);
+        res.status(500).json({
+            success: false,
+            error: "Internal Server Error"
+        });
+    }
+});
+
+// Route 8: Update report status - PUT "/api/admin/reports/:reportId"
+router.put('/reports/:reportId', fetchuser, checkAdmin, [
+    body('status', 'Status must be one of: pending, reviewed, resolved, dismissed')
+        .isIn(['pending', 'reviewed', 'resolved', 'dismissed']),
+    body('adminNotes', 'Admin notes must be less than 1000 characters').optional().isLength({ max: 1000 })
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                errors: errors.array()
+            });
+        }
+
+        const reportId = req.params.reportId;
+        const { status, adminNotes } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(reportId)) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid report ID format"
+            });
+        }
+
+        const report = await Report.findById(reportId);
+        if (!report) {
+            return res.status(404).json({
+                success: false,
+                error: "Report not found"
+            });
+        }
+
+        // Update report
+        report.status = status;
+        if (adminNotes !== undefined) {
+            report.adminNotes = adminNotes;
+        }
+
+        if (status === 'resolved' || status === 'dismissed') {
+            report.resolvedBy = req.user.id;
+            report.resolvedAt = new Date();
+        }
+
+        await report.save();
+
+        // Populate data for response
+        await report.populate('reporter', 'name email profilePic');
+        await report.populate('reportedUser', 'name email profilePic');
+        await report.populate('resolvedBy', 'name');
+
+        res.json({
+            success: true,
+            message: `Report ${status} successfully`,
+            report
+        });
+    } catch (error) {
+        console.error("Error updating report:", error);
+        res.status(500).json({
+            success: false,
+            error: "Internal Server Error"
+        });
+    }
+});
+
+// Route 9: Get report statistics - GET "/api/admin/reports-stats"
+router.get('/reports-stats', fetchuser, checkAdmin, async (req, res) => {
+    try {
+        // Total reports count
+        const totalReports = await Report.countDocuments();
+
+        // Reports by status
+        const reportsByStatus = await Report.aggregate([
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Reports by reason
+        const reportsByReason = await Report.aggregate([
+            {
+                $group: {
+                    _id: '$reason',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Monthly reports count for the last 6 months
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+        const monthlyReports = await Report.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: sixMonthsAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: '$createdAt' },
+                        month: { $month: '$createdAt' }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { '_id.year': 1, '_id.month': 1 }
+            },
+            {
+                $limit: 6
+            }
+        ]);
+
+        // Most reported users
+        const mostReportedUsers = await Report.aggregate([
+            {
+                $group: {
+                    _id: '$reportedUser',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            },
+            {
+                $limit: 5
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            {
+                $unwind: '$user'
+            },
+            {
+                $project: {
+                    _id: 0,
+                    userId: '$_id',
+                    name: '$user.name',
+                    email: '$user.email',
+                    profilePic: '$user.profilePic',
+                    reportCount: '$count'
+                }
+            }
+        ]);
+
+        res.json({
+            success: true,
+            stats: {
+                totalReports,
+                reportsByStatus,
+                reportsByReason,
+                monthlyReports,
+                mostReportedUsers
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching report statistics:", error);
+        res.status(500).json({
+            success: false,
+            error: "Internal Server Error"
         });
     }
 });

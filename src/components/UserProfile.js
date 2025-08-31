@@ -11,9 +11,11 @@ import {
     faSpinner,
     faArrowLeft,
     faUserCircle,
-    faIdCard
+    faIdCard,
+    faFlag
 } from '@fortawesome/free-solid-svg-icons';
 import RatingDisplay from './RatingDisplay';
+import ReportUserModal from './ReportUserModal';
 
 const UserProfile = ({ showAlert }) => {
     const { userId } = useParams();
@@ -22,6 +24,7 @@ const UserProfile = ({ showAlert }) => {
     const [userNotes, setUserNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('profile');
+    const [showReportModal, setShowReportModal] = useState(false);
 
     // Fetch user profile data
     useEffect(() => {
@@ -214,6 +217,17 @@ const UserProfile = ({ showAlert }) => {
                                         <small className="text-muted">Tours Completed</small>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Report Button */}
+                            <div className="mt-3">
+                                <button 
+                                    className="btn btn-outline-danger btn-sm w-100"
+                                    onClick={() => setShowReportModal(true)}
+                                >
+                                    <FontAwesomeIcon icon={faFlag} className="me-1" />
+                                    Report User
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -410,6 +424,16 @@ const UserProfile = ({ showAlert }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Report User Modal */}
+            {showReportModal && (
+                <ReportUserModal
+                    show={showReportModal}
+                    onHide={() => setShowReportModal(false)}
+                    reportedUser={userProfile}
+                    showAlert={showAlert}
+                />
+            )}
         </div>
     );
 };

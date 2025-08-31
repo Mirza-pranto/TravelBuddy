@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faEnvelope, faPhone, faIdCard, faPen, faStar, faMapMarked, faCalendar, faSave, faTimes, faCamera } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faEnvelope, faPhone, faIdCard, faPen, faStar, faMapMarked, faCalendar, faSave, faTimes, faCamera, faFlag } from '@fortawesome/free-solid-svg-icons';
 import UserContext from '../context/userContext';
 
 const Dashboard = (props) => {
@@ -232,6 +232,31 @@ const Dashboard = (props) => {
                                         </span>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Navigation */}
+                            <div className="list-group mt-4">
+                                <button 
+                                    className={`list-group-item list-group-item-action ${activeTab === 'profile' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('profile')}
+                                >
+                                    <FontAwesomeIcon icon={faUser} className="me-2" />
+                                    Profile
+                                </button>
+                                <button 
+                                    className={`list-group-item list-group-item-action ${activeTab === 'tours' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('tours')}
+                                >
+                                    <FontAwesomeIcon icon={faMapMarked} className="me-2" />
+                                    Tours
+                                </button>
+                                <button 
+                                    className="list-group-item list-group-item-action"
+                                    onClick={() => navigate('/my-reports')}
+                                >
+                                    <FontAwesomeIcon icon={faFlag} className="me-2" />
+                                    My Reports
+                                </button>
                             </div>
                         </div>
                     </div>
