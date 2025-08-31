@@ -1,3 +1,4 @@
+// models/User.js - Updated with virtual field
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -64,7 +65,8 @@ const UserSchema = new Schema({
         default: false 
     }
 });
-// Add virtual for postsCount
+
+// Virtual for postsCount
 UserSchema.virtual('postsCount', {
     ref: 'notes',
     localField: '_id',

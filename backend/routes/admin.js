@@ -1,3 +1,4 @@
+// routes/admin.js - Updated with all required endpoints
 const express = require('express');
 const router = express.Router();
 const Notes = require('../models/Notes');
@@ -69,8 +70,7 @@ router.get('/dashboard-stats', fetchuser, checkAdmin, async (req, res) => {
     }
 });
 
-// routes/admin.js - Updated to populate postsCount
-// Route 2: Get all users with pagination and search - Updated to include postsCount
+// Route 2: Get all users with pagination and search
 router.get('/users', fetchuser, checkAdmin, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -93,19 +93,30 @@ router.get('/users', fetchuser, checkAdmin, async (req, res) => {
             };
         }
 
+        // Get users with posts count
         const users = await User.find(searchQuery)
             .select('-password')
             .sort({ [sortBy]: sortOrder })
             .skip(skip)
-            .limit(limit)
-            .populate('postsCount'); // Populate the virtual field
+            .limit(limit);
+
+        // Add posts count to each user
+        const usersWithPostsCount = await Promise.all(
+            users.map(async (user) => {
+                const postsCount = await Notes.countDocuments({ user: user._id });
+                return {
+                    ...user.toObject(),
+                    postsCount
+                };
+            })
+        );
 
         const totalUsers = await User.countDocuments(searchQuery);
         const totalPages = Math.ceil(totalUsers / limit);
 
         res.json({
             success: true,
-            users,
+            users: usersWithPostsCount,
             pagination: {
                 currentPage: page,
                 totalPages,
@@ -269,7 +280,7 @@ router.delete('/posts/:postId', fetchuser, checkAdmin, async (req, res) => {
     }
 });
 
-// Route 6: Get user details by ID - Updated to include posts count
+// Route 6: Get user details by ID
 router.get('/users/:userId', fetchuser, checkAdmin, async (req, res) => {
     try {
         const userId = req.params.userId;

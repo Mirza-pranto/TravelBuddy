@@ -53,21 +53,25 @@ const AdminPanel = ({ showAlert }) => {
                 }
             });
 
+            // Check if response is OK
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
 
             if (data.success) {
                 setStats(data.stats);
             } else {
-                showAlert('Failed to fetch dashboard stats', 'error');
+                showAlert(data.error || 'Failed to fetch dashboard stats', 'error');
             }
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
-            showAlert('Error fetching dashboard stats', 'error');
+            showAlert('Error fetching dashboard stats. Please check if the server is running.', 'error');
         } finally {
             setLoading(false);
         }
     };
-
     const fetchUsers = async () => {
         try {
             setLoading(true);
@@ -82,17 +86,22 @@ const AdminPanel = ({ showAlert }) => {
                 }
             );
 
+            // Check if response is OK
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
 
             if (data.success) {
                 setUsers(data.users);
                 setTotalPages(prev => ({ ...prev, users: data.pagination.totalPages }));
             } else {
-                showAlert('Failed to fetch users', 'error');
+                showAlert(data.error || 'Failed to fetch users', 'error');
             }
         } catch (error) {
             console.error('Error fetching users:', error);
-            showAlert('Error fetching users', 'error');
+            showAlert('Error fetching users. Please check if the server is running.', 'error');
         } finally {
             setLoading(false);
         }
@@ -112,21 +121,27 @@ const AdminPanel = ({ showAlert }) => {
                 }
             );
 
+            // Check if response is OK
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
 
             if (data.success) {
                 setPosts(data.posts);
                 setTotalPages(prev => ({ ...prev, posts: data.pagination.totalPages }));
             } else {
-                showAlert('Failed to fetch posts', 'error');
+                showAlert(data.error || 'Failed to fetch posts', 'error');
             }
         } catch (error) {
             console.error('Error fetching posts:', error);
-            showAlert('Error fetching posts', 'error');
+            showAlert('Error fetching posts. Please check if the server is running.', 'error');
         } finally {
             setLoading(false);
         }
     };
+
 
     const deleteUser = async (userId, userName) => {
         if (!window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
