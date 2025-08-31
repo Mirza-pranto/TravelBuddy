@@ -1,10 +1,14 @@
-// Navbar.js
+// src/components/Navbar.js - Updated with Admin Dashboard link
 import React, { useContext } from 'react';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import UserContext from "../context/userContext";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClipboardList } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faClipboardList, 
+  faUserShield, 
+  faChartLine 
+} from '@fortawesome/free-solid-svg-icons';
 
 const Navbar = () => {
   const location = useLocation();
@@ -19,9 +23,10 @@ const Navbar = () => {
   };
 
   const userData = user || currentUser;
+  const isAdmin = userData?.isAdmin;
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-success sticky-top"> {/* Added sticky-top class */}
+    <nav className="navbar navbar-expand-lg navbar-dark bg-success sticky-top">
       <div className="container-fluid">
         <Link className="navbar-brand fw-bold" to="/">
           🌍 TravelBuddy
@@ -68,6 +73,14 @@ const Navbar = () => {
                     Profile
                   </Link>
                 </li>
+                {isAdmin && (
+                  <li className="nav-item">
+                    <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">
+                      <FontAwesomeIcon icon={faUserShield} className="me-2" />
+                      Admin Panel
+                    </Link>
+                  </li>
+                )}
               </>
             )}
           </ul>
@@ -103,8 +116,22 @@ const Navbar = () => {
                     }}
                   />
                   <span className="d-none d-md-inline">Hi, {userData.name}</span>
+                  {isAdmin && (
+                    <span className="badge bg-warning ms-2">Admin</span>
+                  )}
                 </button>
                 <ul className="dropdown-menu dropdown-menu-end">
+                  {isAdmin && (
+                    <>
+                      <li>
+                        <Link className="dropdown-item" to="/admin">
+                          <FontAwesomeIcon icon={faUserShield} className="me-2" />
+                          Admin Panel
+                        </Link>
+                      </li>
+                      <li><hr className="dropdown-divider" /></li>
+                    </>
+                  )}
                   <li>
                     <Link className="dropdown-item" to="/dashboard">
                       <i className="fas fa-user me-2"></i>

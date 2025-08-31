@@ -1,4 +1,4 @@
-// src/App.js - Integrated with existing context providers
+// src/App.js - Updated with AdminPanel route
 import './App.css';
 import React, { useState } from 'react';
 import {
@@ -24,6 +24,7 @@ import MyRequests from './components/MyRequests';
 import Dashboard from './components/Dashboard';
 import Footer from './components/Footer';
 import UserProfile from './components/UserProfile';
+import AdminPanel from './components/AdminPanel'; // Import the new AdminPanel
 
 function App() {
   const [alert, setAlert] = useState(null);
@@ -59,10 +60,10 @@ function App() {
                       <Route exact path="/profile/:userId" element={<UserProfile showAlert={showAlert} />} />
                       <Route exact path="/my-requests" element={<MyRequests showAlert={showAlert} />} />
                       <Route exact path="/dashboard" element={<Dashboard showAlert={showAlert} />} />
+                      <Route exact path="/admin" element={<AdminPanel showAlert={showAlert} />} /> {/* Add AdminPanel route */}
                     </Routes>
                   </div>
                   <Footer />
-
                 </div>
               </Router>
             </CommentState>

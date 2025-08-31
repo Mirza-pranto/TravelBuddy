@@ -1,3 +1,4 @@
+// backend/index.js - Updated to include admin routes
 const connectToMongo = require('./db');
 const express = require('express');
 const cors = require('cors');
@@ -129,11 +130,13 @@ app.use((error, req, res, next) => {
     next(error);
 });
 
-// Available routes
+// Available routes - MAKE SURE ADMIN ROUTES ARE ADDED HERE
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/notes', require('./routes/notes'));
 app.use('/api/comments', require('./routes/comments'));
-app.use('/api/tour-requests', require('./routes/tourRequests')); // New route
+app.use('/api/tour-requests', require('./routes/tourRequests'));
+app.use('/api/ratings', require('./routes/rating'));
+app.use('/api/admin', require('./routes/admin')); // Add this line for admin routes
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
@@ -147,6 +150,3 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Internal Server Error' });
 });
-
-// Add this line with your other route imports
-app.use('/api/ratings', require('./routes/rating'));

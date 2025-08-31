@@ -64,5 +64,16 @@ const UserSchema = new Schema({
         default: false 
     }
 });
+// Add virtual for postsCount
+UserSchema.virtual('postsCount', {
+    ref: 'notes',
+    localField: '_id',
+    foreignField: 'user',
+    count: true
+});
+
+// Ensure virtual fields are serialized
+UserSchema.set('toJSON', { virtuals: true });
+UserSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('user', UserSchema);
