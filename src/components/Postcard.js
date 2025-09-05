@@ -68,10 +68,13 @@ const Postcard = ({ showAlert }) => {
     }, [id, context, showAlert]);
 
     const getImageUrl = (imagePath) => {
-        if (!imagePath) return null;
-        if (imagePath.startsWith('http')) return imagePath;
-        return `http://localhost:5000${imagePath}`; // Match your existing host configuration
-    };
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    
+    // Remove any leading slash that might cause double slashes
+    const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    return `http://localhost:5000/${cleanPath}`;
+};
 
     const getProfilePicUrl = (profilePic) => {
         if (!profilePic) return "https://via.placeholder.com/150?text=User";

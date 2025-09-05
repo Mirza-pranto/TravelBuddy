@@ -16,6 +16,7 @@ router.get('/fetchallnotes', fetchuser, async (req, res) => {
 });
 
 //Route 2: Add a new note: POST "/api/notes/addnote" . Login required
+// In routes/notes.js - update the addnote route
 router.post('/addnote', fetchuser, [
     body('title', 'Enter a valid title').isLength({ min: 3 }),
     body('destination', 'Destination is required').notEmpty(),
@@ -26,7 +27,7 @@ router.post('/addnote', fetchuser, [
     body('description', 'Description must be at least 5 characters').isLength({ min: 5 }),
 ], async (req, res) => { 
     try {
-        const { title, destination, startDate, endDate, budget, travelType, description, tag } = req.body;
+        const { title, destination, startDate, endDate, budget, travelType, description, tag, images, featuredImage } = req.body; // Add images and featuredImage
 
         // Validate errors
         const errors = validationResult(req);
@@ -43,6 +44,8 @@ router.post('/addnote', fetchuser, [
             travelType,
             description,
             tag,
+            images: images || [],          // Add this
+            featuredImage: featuredImage || '', // Add this
             user: req.user.id
         });
 

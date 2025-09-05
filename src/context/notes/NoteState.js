@@ -31,7 +31,7 @@ const NoteState = (props) => {
                 }
             });
             const json = await response.json();
-            
+
             if (response.ok) {
                 return json;
             } else {
@@ -45,6 +45,7 @@ const NoteState = (props) => {
     };
 
     // Add a Note
+    // In NoteState.js - update the addNote function
     const addNote = async (title, destination, startDate, endDate, budget, travelType, description, tag, images = [], featuredImage = '') => {
         // API Call
         const response = await fetch(`${host}/api/notes/addnote`, {
@@ -54,26 +55,26 @@ const NoteState = (props) => {
                 'auth-token': localStorage.getItem('token')
             },
             body: JSON.stringify({
-                title, 
-                destination, 
-                startDate, 
-                endDate, 
-                budget, 
-                travelType, 
-                description, 
+                title,
+                destination,
+                startDate,
+                endDate,
+                budget,
+                travelType,
+                description,
                 tag,
-                images,
-                featuredImage
+                images,          // Make sure this is included
+                featuredImage    // And this too
             })
         });
-        
+
         const json = await response.json();
-        
+
         if (json.errors) {
             console.error('Validation errors:', json.errors);
             return false;
         }
-        
+
         if (response.ok) {
             setNotes(notes.concat(json));
             return true;

@@ -137,6 +137,8 @@ app.use('/api/comments', require('./routes/comments'));
 app.use('/api/tour-requests', require('./routes/tourRequests'));
 app.use('/api/ratings', require('./routes/rating'));
 app.use('/api/admin', require('./routes/admin')); // Add this line for admin routes
+// Serve uploaded files statically - make sure this line exists
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/reports', require('./routes/reports'));
 app.get('/', (req, res) => {

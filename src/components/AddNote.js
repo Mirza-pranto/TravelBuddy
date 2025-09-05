@@ -54,6 +54,9 @@ const AddNote = (props) => {
                 const result = await response.json();
                 uploadedImages = result.filePaths;
                 uploadedFeaturedImage = uploadedImages[0] || "";
+                
+                console.log('Uploaded images:', uploadedImages);
+                console.log('Featured image:', uploadedFeaturedImage);
             } catch (error) {
                 console.error("Image upload error:", error);
                 props.showAlert("Failed to upload images", "error");
